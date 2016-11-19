@@ -1,0 +1,12 @@
+--break
+--color
+--color-match=red
+--color-filename=magenta
+--color-lineno=green
+--smart-case
+--type-add=make:ext:MK
+--type-add=make:ext:make
+--type-add=make:ext:mk
+--type-add=make:match:TARGET.mk*
+--type-add=make:match:EGF_Version.mk*
+--type-set=cc=.c,.cc,.cpp
