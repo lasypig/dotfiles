@@ -52,6 +52,37 @@ vnoremap <space> za
 
 set t_Co=256
 
+"======================================
+" VIM PLUG
+"======================================
+let g:plug_window = 'new'
+call plug#begin()
+Plug 'scrooloose/nerdtree'
+Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'itchyny/lightline.vim'
+Plug 'ryanoasis/vim-devicons'
+Plug 'timakro/vim-searchant'
+Plug 'leafgarland/typescript-vim'
+Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
+Plug 'lilydjwg/colorizer'
+Plug 'AndrewRadev/splitjoin.vim'
+Plug 'lasypig/chromatica.nvim'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'zchee/libclang-python3'
+Plug 'joshdick/onedark.vim'
+Plug 'zanglg/nova.vim'
+Plug 'WolfgangMehner/c-support'
+Plug 'jiangmiao/auto-pairs'
+Plug 'mileszs/ack.vim'
+Plug 'qpkorr/vim-bufkill'
+Plug 'MaxSt/FlatColor'
+Plug 'majutsushi/tagbar'
+Plug 'w0rp/ale'
+Plug 'godlygeek/tabular'
+Plug 'mattn/vim-maketable'
+Plug 'mhinz/vim-lookup'
+call plug#end()
+
 if has("gui_running")
 	set ambiwidth=double
 	colorscheme onedark
@@ -60,16 +91,16 @@ if has("gui_running")
 		set guifont=Consolas:h10
 		set clipboard=unnamed
 	else
-		au GUIEnter * call MaximizeWindow()
+		au GUIEnter * call shy#MaximizeWindow()
 		set guifont=Consolas\ 11
 	endif
 else
-	colorscheme one
+	if exists('g:gui_oni')
+		colorscheme onedark
+	else
+		colorscheme one
+	endif
 endif
-
-function! MaximizeWindow()
-    silent !wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
-endfunction
 
 
 "===========================
@@ -93,7 +124,7 @@ map <F2> ggVG=
 " NERDTree
 let NERDChristmasTree=1
 let NERDTreeIgnore=['\.d$', '\~$','\.a$','\.o$','tags$',] 
-let g:NERDTreeDirArrowExpandable = '▶'
+"let g:NERDTreeDirArrowExpandable = '▶'
 "let g:NERDTreeDirArrowCollapsible = '▼ '
 "let g:NERDTreeDisableFileExtensionHighlight = 1
 "let g:NERDTreeExtensionHighlightColor = {}
@@ -109,12 +140,7 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTree
 " C-support 
 let  g:C_UseTool_doxygen = 'yes'
 
-function! TerminalAutoInsert()
-	if &buftype ==# "terminal"
-		startinsert
-	endif
-endfunction
-autocmd WinEnter *  call TerminalAutoInsert()
+autocmd WinEnter *  call shy#TerminalAutoInsert()
 
 set ttimeout ttimeoutlen=50
 
@@ -161,7 +187,7 @@ au BufWinEnter *.c,*.h let w:m2=matchadd('Search', '\%81v', -1)
 set clipboard=unnamedplus
 
 " Improved n/N - center line after page scroll
-function! s:nice_next(cmd)
+function! s:nice_next(cmd) abort
     let topline  = line('w0')
     let v:errmsg = ""
     execute "silent! normal! " . a:cmd
@@ -188,32 +214,6 @@ endif
 nnoremap t<CR> :below 20sp term://$SHELL<CR>i
 
 "======================================
-" VIM PLUG
-"======================================
-let g:plug_window = 'new'
-call plug#begin()
-Plug 'scrooloose/nerdtree'
-Plug 'Xuyuanp/nerdtree-git-plugin'
-Plug 'itchyny/lightline.vim'
-Plug 'ryanoasis/vim-devicons'
-Plug 'timakro/vim-searchant'
-Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
-Plug 'lilydjwg/colorizer'
-Plug 'AndrewRadev/splitjoin.vim'
-Plug 'lasypig/chromatica.nvim'
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'joshdick/onedark.vim'
-Plug 'WolfgangMehner/c-support'
-Plug 'jiangmiao/auto-pairs'
-Plug 'mileszs/ack.vim'
-Plug 'qpkorr/vim-bufkill'
-Plug 'MaxSt/FlatColor'
-Plug 'majutsushi/tagbar'
-Plug 'w0rp/ale'
-Plug 'godlygeek/tabular'
-call plug#end()
-
-"======================================
 " lightline settings
 "======================================
 let g:lightline = {
@@ -223,68 +223,19 @@ let g:lightline = {
       \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ] ]
       \ },
       \ 'component_function': {
-      \   'modified': 'LightLineModified',
-      \   'readonly': 'LightLineReadonly',
-      \   'fugitive': 'LightLineFugitive',
-      \   'filename': 'LightLineFilename',
-      \   'fileformat': 'MyFileformat',
-      \   'filetype': 'MyFiletype',
-      \   'fileencoding': 'LightLineFileencoding',
-      \   'mode': 'LightLineMode',
+      \   'modified': 'shy#LightLineModified',
+      \   'readonly': 'shy#LightLineReadonly',
+      \   'fugitive': 'shy#LightLineFugitive',
+      \   'filename': 'shy#LightLineFilename',
+      \   'fileformat': 'shy#MyFileformat',
+      \   'filetype': 'shy#MyFiletype',
+      \   'fileencoding': 'shy#LightLineFileencoding',
+      \   'mode': 'shy#LightLineMode',
       \ },
 	  \ 'separator': { 'left': "\u2b80", 'right': "\u2b82" },
 	  \ 'subseparator': { 'left': "\u2b81", 'right': "\u2b83" }
       \ }
 
-function! MyFiletype()
-	return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype . ' ' . WebDevIconsGetFileTypeSymbol() : 'no ft') : ''
-endfunction
-
-function! MyFileformat()
-	return winwidth(0) > 70 ? (&fileformat . ' ' . WebDevIconsGetFileFormatSymbol()) : ''
-endfunction
-
-
-function! LightLineModified()
-	return &ft =~ 'help\|vimfiler\|gundo' ? '' : &modified ? '+' : &modifiable ? '' : '-'
-endfunction
-
-function! LightLineReadonly()
-	return &ft !~? 'help\|vimfiler\|gundo' && &readonly ? '⭤' : ''
-endfunction
-
-function! LightLineFilename()
-	return ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
-				\ (&ft == 'vimfiler' ? vimfiler#get_status_string() :
-				\  &ft == 'unite' ? unite#get_status_string() :
-				\  &ft == 'vimshell' ? vimshell#get_status_string() :
-				\ '' != expand('%:t') ? expand('%:t') : '[No Name]') .
-				\ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
-endfunction
-
-function! LightLineFugitive()
-	if &ft !~? 'vimfiler\|gundo' && exists("*fugitive#head")
-		let branch = fugitive#head()
-		return branch !=# '' ? '⭠ '.branch : ''
-	endif
-	return ''
-endfunction
-
-function! LightLineFileformat()
-	return winwidth(0) > 70 ? &fileformat : ''
-endfunction
-
-function! LightLineFiletype()
-	return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
-endfunction
-
-function! LightLineFileencoding()
-	return winwidth(0) > 70 ? (&fenc !=# '' ? &fenc : &enc) : ''
-endfunction
-
-function! LightLineMode()
-	return winwidth(0) > 60 ? lightline#mode() : ''
-endfunction
 
 " persistent undo
 if has('persistent_undo')
@@ -309,12 +260,22 @@ let g:chromatica#libclang_path='/usr/lib/llvm-3.9/lib'
 let g:chromatica#enable_at_startup=1
 let g:chromatica#highlight_feature_level=1
 let g:chromatica#responsive_mode=0
+hi Member    ctermfg=166 guifg=#cb4b16
+hi Type      ctermfg=35  guifg=Green
+hi Namespace ctermfg=14  guifg=#006bd2
+hi Typedef   ctermfg=166 gui=bold guifg=#BBBB00
+hi AutoType  ctermfg=208 guifg=#ff8700
+hi EnumConstant        ctermfg=118 guifg=LightGreen
+hi chromaticaException ctermfg=166 gui=bold guifg=#B58900
+hi chromaticaCast      ctermfg=35  gui=bold guifg=#719E07
+hi link chromaticaInclusionDirective cInclude
+hi link chromaticaMemberRefExprCall  Type
 
 "===========================
 " YCM desn't support 32-bit system
 "===========================
 let g:deoplete#enable_at_startup = 1
-let g:deoplete#disable_auto_complete = 1
+"let g:deoplete#disable_auto_complete = 1
 inoremap <silent><expr> <TAB>
 			\ pumvisible() ? "\<C-n>" :
 			\ <SID>check_back_space() ? "\<TAB>" :
@@ -338,3 +299,13 @@ let g:ale_sign_warning = '->'
 let g:NERDTreeDisableExactMatchHighlight = 1
 let g:NERDTreeDisablePatternMatchHighlight = 1
 
+"===========================
+" deoplete-clang
+"===========================
+let g:deoplete#sources#clang#libclang_path = '/usr/lib/llvm-3.9/lib/libclang.so'
+let g:deoplete#sources#clang#clang_header = '/usr/lib/llvm-3.9/clang'
+
+"===========================
+" vim-lookup
+"===========================
+autocmd FileType vim nnoremap <buffer><silent> <cr>  :call lookup#lookup()<cr>

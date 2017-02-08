@@ -112,17 +112,26 @@ noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
 noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
 
 set t_Co=256
-" colorscheme lucius
-" LuciusWhiteHighContrast
-" LuciusBlackHighContrast
 
-" set background=light
-" let g:solarized_termcolors=256
-" let g:solarized_contrast=0
-" colorscheme solarized
-
-" colorscheme tesla
-" colorscheme neonwave
+"=========================
+" VIM PLUG
+"=========================
+let g:plug_window = 'new'
+call plug#begin()
+Plug 'ryanoasis/vim-devicons'
+Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
+Plug 'timakro/vim-searchant'
+Plug 'Marfisc/vorange'
+Plug 'vim-scripts/OmniCppComplete'
+Plug 'cohama/lexima.vim'
+Plug 'majutsushi/tagbar'
+Plug 'w0rp/ale'
+Plug 'skywind3000/asyncrun.vim'
+Plug 'vim-scripts/TagHighlight'
+Plug 'leafgarland/typescript-vim'
+"Plug 'yuttie/comfortable-motion.vim'
+Plug 'zanglg/nova.vim'
+call plug#end()
 
 if has("gui_running")
 	set ambiwidth=double
@@ -277,24 +286,6 @@ nnoremap <silent> n :call <SID>nice_next('n')<cr>
 nnoremap <silent> N :call <SID>nice_next('N')<cr>
 
 "=========================
-" VIM PLUG
-"=========================
-let g:plug_window = 'new'
-call plug#begin()
-Plug 'ryanoasis/vim-devicons'
-Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
-Plug 'timakro/vim-searchant'
-Plug 'Marfisc/vorange'
-Plug 'vim-scripts/OmniCppComplete'
-Plug 'cohama/lexima.vim'
-Plug 'majutsushi/tagbar'
-Plug 'w0rp/ale'
-Plug 'skywind3000/asyncrun.vim'
-Plug 'vim-scripts/TagHighlight'
-Plug 'bbchung/clighter8'
-call plug#end()
-
-"=========================
 " OmniCppComplete
 "=========================
 let OmniCpp_NamespaceSearch = 1
@@ -316,9 +307,3 @@ let &runtimepath.=',~/.vim/plugged/ale'
 let g:ale_sign_warning = '->'
 filetype plugin on
 
-"=========================
-" clighter8
-"=========================
-let g:clighter8_autostart = 1
-let g:clighter8_libclang_path = '/usr/lib/llvm-3.9/lib/libclang.so'
-let g:clighter8_parse_mode = 1
