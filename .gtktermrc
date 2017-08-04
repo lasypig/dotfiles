@@ -11,20 +11,21 @@ rs485_rts_time_before_tx	= 30
 rs485_rts_time_after_tx	= 30
 echo	= False
 crlfauto	= False
-font	= "mononoki, 11"
+font	= "Consolas, 10"
 term_transparency	= False
 term_show_cursor	= True
 term_rows	= 80
 term_columns	= 25
 term_scrollback	= 2000
 term_visual_bell	= True
-term_foreground_red        = 0xeeee
-term_foreground_blue       = 0xeeee
-term_foreground_green      = 0xeeee
-term_background_red        = 0x4444
-term_background_blue       = 0x4444
-term_background_green      = 0x4444
+term_foreground_red        = 0x0
+term_foreground_blue       = 0x0
+term_foreground_green      = 0x0
+term_background_red        = 0xffff
+term_background_blue       = 0xffff
+term_background_green      = 0xffff
 term_background_saturation = 0.500000
+
 
 [ttyS0]
 port	= /dev/ttyS0
@@ -67,7 +68,7 @@ rs485_rts_time_before_tx	= 30
 rs485_rts_time_after_tx	= 30
 echo	= False
 crlfauto	= False
-font	= "Consolas, 11"
+font	= "Consolas, 10"
 term_transparency	= False
 term_show_cursor	= True
 term_rows	= 80

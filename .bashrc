@@ -50,7 +50,7 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;35m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W\[\033[00m\]\$ '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;35m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\W\$ '
 fi
@@ -67,7 +67,7 @@ esac
 
 PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
 function _update_ps1() {
-	PS1="$(~/misc/powerline-shell/powerline-shell.py --cwd-max-depth 3 $? 2> /dev/null)"
+	PS1="$(~/.lasypig/powerline-shell.py --cwd-max-depth 3 $? 2> /dev/null)"
 }
 
 if [ -z "$SSH_CLIENT" ] && [ -z "$SSH_TTY" ]; then
@@ -98,7 +98,6 @@ function b { cd ..; }
 
 # mine
 alias emacs='emacs-25.1.50'
-#alias b='cd ..'
 alias rmm='rm -vf *~ .*~ .*.swp'
 alias du='du -sh * | sort -rh'
 alias ..='cd ..'
@@ -113,6 +112,8 @@ alias svnadd="svn status | grep \"^?\" | awk '{print $2}' | xargs svn add "
 alias ctags='ctags -R --c-kinds=+p  --fields=+ias --extra=+q'
 alias :q='exit'
 alias define='googler -p 127.0.0.1:8087 -n 2 define'
+alias dumpobj='/opt/arm-2009q1/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
+alias xo='xdg-open'
 
 bind -x '"\C-l":ls -l'
 
@@ -132,9 +133,20 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
 
-export PATH=$PATH:/home/wangxb/.lasypig:/opt/arm-2009q1/bin:/usr/local/texlive/2013/bin/i386-linux:/home/wangxb/misc/node-v5.5.0-linux-x86/bin
-export PYTHONPATH=$(echo /usr/lib/llvm-3.9/build/lib/)
-export LD_LIBRARY_PATH=$(llvm-config-3.9 --libdir)
+function addToPATH {
+  case ":$PATH:" in
+    *":$1:"*) :;; # already there
+    *) PATH="$PATH:$1";;
+  esac
+}
+addToPATH /lib/x86_64-linux-gnu
+addToPATH /home/wangxb/.lasypig
+addToPATH /opt/arm-2009q1/bin
+addToPATH /usr/local/texlive/2013/bin/i386-linux
+addToPATH /home/wangxb/misc/node.js/bin
+
+export PYTHONPATH=$(echo /usr/lib/llvm-4.0/build/lib/)
+export LD_LIBRARY_PATH=$(llvm-config-4.0 --libdir)
 
 if [ -f /etc/bash_completion ]; then
 	. /etc/bash_completion
@@ -164,8 +176,6 @@ fi
 ################################################################
 # colorize make
 ################################################################
-alias gcc="color_compile gcc"
-alias g++="color_compile g++"
 alias make="color_compile make -j4"
 alias arm-none-linux-gnueabi-gcc="color_compile arm-none-linux-gnueabi-gcc"
 
@@ -230,6 +240,9 @@ function svn
 	then
 		eval $(which svn) $CMD | while IFS= read -r RL
 		do
+			if   [[ $RL =~ ^$ ]]; then
+				continue;
+			fi
 			if   [[ $RL =~ ^r[0-9] ]]; then C="";
 			elif [[ $RL =~ ^-- ]]; then C="\033[35m";
 			else C="\033[34m";
@@ -254,7 +267,7 @@ man() {
     LESS_TERMCAP_so=$(printf "\e[38;5;212m") \
     LESS_TERMCAP_ue=$(printf "\e[0m") \
     LESS_TERMCAP_us=$(printf "\e[04;38;5;146m") \
-    man "$@"
+    man -S 2:3:1 "$@"
 }
 
 # press ctrl-l to ls
@@ -264,8 +277,12 @@ bind -x '"\C-l":ls -l'
 setxkbmap -option ctrl:nocaps
 
 # fuck gfw
-ps -ef | grep -i XX-net | grep -iv grep > /dev/null
+ps -ef | grep -i XX-Net | grep -iv grep > /dev/null
 if [ $? -gt 0 ]; then
-	sudo ~/misc/XX-Net/code/default/xx_net.sh start
+	/home/wangxb/misc/XX-Net/start 2> /dev/null &
 fi
 
+export GOPATH='/home/wangxb/tmp/Go'
+alias tmux="env TERM=xterm-256color tmux"
+
+eval "$(thefuck --alias)"

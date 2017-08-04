@@ -18,7 +18,7 @@ set noexpandtab
 set number
 "set relativenumber
 set cursorline!
-set lazyredraw
+"set lazyredraw
 
 "set colorcolumn=80
 "set cursorcolumn
@@ -37,9 +37,14 @@ set wildmode=list:longest
 set ignorecase
 set smartcase
 set inccommand=nosplit
+set mouse=a
 
 silent let g:cur_term = system('ps -p $(ps -p $(ps -p $(ps -p $$ -o ppid=) -o ppid=) -o ppid=) o args=')
 if g:cur_term =~ "gnome-terminal"
+	set termguicolors
+endif
+
+if  g:cur_term =~ "tmux"
 	set termguicolors
 endif
 
@@ -51,6 +56,7 @@ nnoremap <space> za
 vnoremap <space> za
 
 set t_Co=256
+let $NVIM_TUI_ENABLE_CURSOR_SHAPE = 0
 
 "======================================
 " VIM PLUG
@@ -59,7 +65,9 @@ let g:plug_window = 'new'
 call plug#begin()
 Plug 'scrooloose/nerdtree'
 Plug 'Xuyuanp/nerdtree-git-plugin'
-Plug 'itchyny/lightline.vim'
+if !exists('g:gui_oni')
+	Plug 'itchyny/lightline.vim'
+endif
 Plug 'ryanoasis/vim-devicons'
 Plug 'timakro/vim-searchant'
 Plug 'leafgarland/typescript-vim'
@@ -81,6 +89,7 @@ Plug 'w0rp/ale'
 Plug 'godlygeek/tabular'
 Plug 'mattn/vim-maketable'
 Plug 'mhinz/vim-lookup'
+Plug 'tweekmonster/startuptime.vim'
 call plug#end()
 
 if has("gui_running")
@@ -96,9 +105,11 @@ if has("gui_running")
 	endif
 else
 	if exists('g:gui_oni')
+		set noruler
+		set laststatus=0
 		colorscheme onedark
 	else
-		colorscheme one
+		colorscheme onedark
 	endif
 endif
 
@@ -109,12 +120,13 @@ endif
 if !&diff
 	autocmd FileType c,cpp,h,vim,py,lua nested :TagbarOpen
 endif
+let g:tagbar_sort = 0
 
 set tags=tags;
 set autochdir
 
 " encoding
-" set encoding=cp936
+set encoding=utf-8
 " let &termencoding=&encoding
 set fileencodings=ucs-bom,utf-8,gbk,cp936
 
@@ -138,7 +150,10 @@ nmap <F3> :NERDTreeToggle<CR><c-w>h
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 
 " C-support 
-let  g:C_UseTool_doxygen = 'yes'
+let g:C_UseTool_doxygen = 'yes'
+let g:C_LocalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
+let g:C_GlobalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
+let g:C_CustomTemplateFile = $HOME.'/.config/nvim/templates/Templates'
 
 autocmd WinEnter *  call shy#TerminalAutoInsert()
 
@@ -232,8 +247,8 @@ let g:lightline = {
       \   'fileencoding': 'shy#LightLineFileencoding',
       \   'mode': 'shy#LightLineMode',
       \ },
-	  \ 'separator': { 'left': "\u2b80", 'right': "\u2b82" },
-	  \ 'subseparator': { 'left': "\u2b81", 'right': "\u2b83" }
+	  \ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+	  \ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" }
       \ }
 
 
@@ -256,7 +271,7 @@ noremap <leader>yd :<C-u>Yde<CR>
 " chromatica
 "===========================
 let g:diminactive_buftype_blacklist = []
-let g:chromatica#libclang_path='/usr/lib/llvm-3.9/lib'
+let g:chromatica#libclang_path='/usr/lib/llvm-4.0/lib'
 let g:chromatica#enable_at_startup=1
 let g:chromatica#highlight_feature_level=1
 let g:chromatica#responsive_mode=0
@@ -265,7 +280,7 @@ hi Type      ctermfg=35  guifg=Green
 hi Namespace ctermfg=14  guifg=#006bd2
 hi Typedef   ctermfg=166 gui=bold guifg=#BBBB00
 hi AutoType  ctermfg=208 guifg=#ff8700
-hi EnumConstant        ctermfg=118 guifg=LightGreen
+hi EnumConstant        ctermfg=208 guifg=#ff8700
 hi chromaticaException ctermfg=166 gui=bold guifg=#B58900
 hi chromaticaCast      ctermfg=35  gui=bold guifg=#719E07
 hi link chromaticaInclusionDirective cInclude
@@ -292,6 +307,9 @@ filetype off
 let &runtimepath.=',~/.config/nvim/plugged/ale'
 filetype plugin on
 let g:ale_sign_warning = '->'
+let g:ale_linters = { 
+			\ 'c': ['clang'],
+			\}
 
 "===========================
 " nerdtree-syntax-highlight
@@ -302,10 +320,11 @@ let g:NERDTreeDisablePatternMatchHighlight = 1
 "===========================
 " deoplete-clang
 "===========================
-let g:deoplete#sources#clang#libclang_path = '/usr/lib/llvm-3.9/lib/libclang.so'
-let g:deoplete#sources#clang#clang_header = '/usr/lib/llvm-3.9/clang'
+let g:deoplete#sources#clang#libclang_path = '/usr/lib/llvm-4.0/lib/libclang.so'
+let g:deoplete#sources#clang#clang_header = '/usr/lib/llvm-4.0/clang'
 
 "===========================
 " vim-lookup
 "===========================
 autocmd FileType vim nnoremap <buffer><silent> <cr>  :call lookup#lookup()<cr>
+

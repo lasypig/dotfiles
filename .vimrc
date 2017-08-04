@@ -138,13 +138,12 @@ if has("gui_running")
 	colorscheme onedark
 	if has("win32")
 		au GUIEnter * simalt ~x
-		set guifont=Consolas:h10
+		set guifont=Consolas\ Nerd\ Font:h10
 		set clipboard=unnamed
 	else
 		au GUIEnter * call MaximizeWindow()
-		"set guifont=Consolas\ 11
-		"set guifont=mononoki\ 10
-		set guifont=Noto\ Mono\ 10
+		"set guifont=Noto\ Mono\ 10
+		set guifont=Consolas\ Nerd\ Font\ 10
 	endif
 else
 	colorscheme one
@@ -161,6 +160,7 @@ endfunction
 if !&diff
 	autocmd FileType c,cpp,h,vim,py,lua nested :TagbarOpen
 endif
+let g:tagbar_sort = 0
 
 set tags=tags;
 set autochdir
@@ -232,8 +232,8 @@ let g:lightline = {
 			\ 'component': {
 			\ 'readonly': '%{&readonly?"\u2b64":""}',
 			\ },
-		    \ 'separator': { 'left': "\u2b80", 'right': "\u2b82" },
-		    \ 'subseparator': { 'left': "\u2b81", 'right': "\u2b83" }
+		    \ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+		    \ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" }
 			\ }
 
 let g:C_GuiSnippetBrowser = 'commandline'
