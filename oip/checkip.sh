@@ -10,5 +10,6 @@ if [ "$newip" != "$oldip" ]; then
 	cd ..
 	git add oip/ip.txt
 	git commit . -m "ip changed to $newip"
+	git push origin master
 fi
 
