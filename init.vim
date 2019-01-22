@@ -33,6 +33,7 @@ set hidden
 runtime macros/matchit.vim
 set wildmenu
 set wildmode=list:longest
+vnoremap <LeftRelease> "*ygv
 
 set ignorecase
 set smartcase
@@ -43,7 +44,9 @@ silent let g:cur_term = system('ps -p $(ps -p $(ps -p $(ps -p $$ -o ppid=) -o pp
 if g:cur_term =~ "gnome-terminal"
 	set termguicolors
 endif
-
+if g:cur_term =~ "terminator"
+	set termguicolors
+endif
 if  g:cur_term =~ "tmux"
 	set termguicolors
 endif
@@ -56,25 +59,31 @@ nnoremap <space> za
 vnoremap <space> za
 
 set t_Co=256
-let $NVIM_TUI_ENABLE_CURSOR_SHAPE = 0
+set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
+			\,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
+			\,sm:block-blinkwait175-blinkoff150-blinkon175
 
 "======================================
 " VIM PLUG
 "======================================
 let g:plug_window = 'new'
 call plug#begin()
-Plug 'scrooloose/nerdtree'
-Plug 'Xuyuanp/nerdtree-git-plugin'
+"Plug 'Xuyuanp/nerdtree-git-plugin'
 if !exists('g:gui_oni')
-	Plug 'itchyny/lightline.vim'
+    if g:cur_term !~ "sshd"
+		Plug 'itchyny/lightline.vim'
+	endif
+	Plug 'scrooloose/nerdtree'
+	Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
+	Plug 'lasypig/chromatica.nvim'
 endif
+if g:cur_term !~ "sshd"
 Plug 'ryanoasis/vim-devicons'
+endif
 Plug 'timakro/vim-searchant'
 Plug 'leafgarland/typescript-vim'
-Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plug 'lilydjwg/colorizer'
 Plug 'AndrewRadev/splitjoin.vim'
-Plug 'lasypig/chromatica.nvim'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'zchee/libclang-python3'
 Plug 'joshdick/onedark.vim'
@@ -104,7 +113,7 @@ if has("gui_running")
 		set guifont=Consolas\ 11
 	endif
 else
-	if exists('g:gui_oni')
+	if exists('g:gui_ond')
 		set noruler
 		set laststatus=0
 		colorscheme onedark
@@ -134,26 +143,28 @@ set fileencodings=ucs-bom,utf-8,gbk,cp936
 map <F2> ggVG=
 
 " NERDTree
-let NERDChristmasTree=1
-let NERDTreeIgnore=['\.d$', '\~$','\.a$','\.o$','tags$',] 
-"let g:NERDTreeDirArrowExpandable = '▶'
-"let g:NERDTreeDirArrowCollapsible = '▼ '
-"let g:NERDTreeDisableFileExtensionHighlight = 1
-"let g:NERDTreeExtensionHighlightColor = {}
-let g:NERDSpaceDelims = 1
-if !&diff
-	au VimEnter * NERDTree
-	au VimEnter * wincmd w
+if !exists('g:gui_oni')
+	let NERDChristmasTree=1
+	let NERDTreeIgnore=['\.d$', '\~$','\.a$','\.o$','tags$',] 
+	"let g:NERDTreeDirArrowExpandable = '▶'
+	"let g:NERDTreeDirArrowCollapsible = '▼ '
+	"let g:NERDTreeDisableFileExtensionHighlight = 1
+	"let g:NERDTreeExtensionHighlightColor = {}
+	let g:NERDSpaceDelims = 1
+	if !&diff
+		au VimEnter * NERDTree
+		au VimEnter * wincmd w
+	endif
+	nmap <F3> :NERDTreeToggle<CR><c-w>h
+	" close vim if the only window left open is a nerdtree
+	autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 endif
-nmap <F3> :NERDTreeToggle<CR><c-w>h
-" close vim if the only window left open is a nerdtree
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 
 " C-support 
 let g:C_UseTool_doxygen = 'yes'
-let g:C_LocalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
-let g:C_GlobalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
-let g:C_CustomTemplateFile = $HOME.'/.config/nvim/templates/Templates'
+"let g:C_LocalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
+"let g:C_GlobalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
+"let g:C_CustomTemplateFile = $HOME.'/.config/nvim/templates/Templates'
 
 autocmd WinEnter *  call shy#TerminalAutoInsert()
 
@@ -271,7 +282,7 @@ noremap <leader>yd :<C-u>Yde<CR>
 " chromatica
 "===========================
 let g:diminactive_buftype_blacklist = []
-let g:chromatica#libclang_path='/usr/lib/llvm-4.0/lib'
+let g:chromatica#libclang_path='/usr/lib/llvm-6.0/lib'
 let g:chromatica#enable_at_startup=1
 let g:chromatica#highlight_feature_level=1
 let g:chromatica#responsive_mode=0
@@ -314,14 +325,16 @@ let g:ale_linters = {
 "===========================
 " nerdtree-syntax-highlight
 "===========================
-let g:NERDTreeDisableExactMatchHighlight = 1
-let g:NERDTreeDisablePatternMatchHighlight = 1
+if !exists('g:gui_oni')
+	let g:NERDTreeDisableExactMatchHighlight = 1
+	let g:NERDTreeDisablePatternMatchHighlight = 1
+endif
 
 "===========================
 " deoplete-clang
 "===========================
-let g:deoplete#sources#clang#libclang_path = '/usr/lib/llvm-4.0/lib/libclang.so'
-let g:deoplete#sources#clang#clang_header = '/usr/lib/llvm-4.0/clang'
+let g:deoplete#sources#clang#libclang_path = '/usr/lib/llvm-6.0/lib/libclang.so'
+let g:deoplete#sources#clang#clang_header = '/usr/lib/llvm-6.0/clang'
 
 "===========================
 " vim-lookup
