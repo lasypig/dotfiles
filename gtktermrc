@@ -1,0 +1,28 @@
+[default]
+port	= /dev/ttyUSB0
+speed	= 115200
+bits	= 8
+stopbits	= 1
+parity	= none
+flow	= none
+wait_delay	= 0
+wait_char	= -1
+rs485_rts_time_before_tx	= 30
+rs485_rts_time_after_tx	= 30
+echo	= False
+crlfauto	= False
+font	= "Consolas Nerd Font 10"
+term_block_cursor	= True
+term_rows	= 80
+term_columns	= 25
+term_scrollback	= 2000
+term_visual_bell	= True
+term_foreground_red	= 0.160000
+term_foreground_blue	= 0.160000
+term_foreground_green	= 0.160000
+term_foreground_alpha	= 1.000000
+term_background_red	= 1.000000
+term_background_blue	= 1.000000
+term_background_green	= 1.000000
+term_background_alpha	= 1.000000
+

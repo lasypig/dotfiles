@@ -108,6 +108,8 @@ set wildmode=list:longest
 set ignorecase
 set smartcase
 
+set termguicolors
+
 noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
 noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
 
@@ -118,6 +120,7 @@ set t_Co=256
 "=========================
 let g:plug_window = 'new'
 call plug#begin()
+Plug 'scrooloose/nerdtree'
 Plug 'ryanoasis/vim-devicons'
 Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plug 'timakro/vim-searchant'
@@ -125,12 +128,13 @@ Plug 'Marfisc/vorange'
 Plug 'vim-scripts/OmniCppComplete'
 Plug 'cohama/lexima.vim'
 Plug 'majutsushi/tagbar'
-Plug 'w0rp/ale'
+"Plug 'w0rp/ale'
 Plug 'skywind3000/asyncrun.vim'
 Plug 'vim-scripts/TagHighlight'
 Plug 'leafgarland/typescript-vim'
 "Plug 'yuttie/comfortable-motion.vim'
 Plug 'zanglg/nova.vim'
+Plug 'joshdick/onedark.vim'
 call plug#end()
 
 if has("gui_running")
@@ -138,16 +142,15 @@ if has("gui_running")
 	colorscheme onedark
 	if has("win32")
 		au GUIEnter * simalt ~x
-		set guifont=Consolas:h10
+		set guifont=Consolas\ Nerd\ Font:h10
 		set clipboard=unnamed
 	else
 		au GUIEnter * call MaximizeWindow()
-		"set guifont=Consolas\ 11
-		"set guifont=mononoki\ 10
-		set guifont=Noto\ Mono\ 10
+		"set guifont=Noto\ Mono\ 10
+		set guifont=Consolas\ Nerd\ Font\ 10
 	endif
 else
-	colorscheme one
+	colorscheme onedark
 endif
 
 function! MaximizeWindow()
@@ -161,6 +164,7 @@ endfunction
 if !&diff
 	autocmd FileType c,cpp,h,vim,py,lua nested :TagbarOpen
 endif
+let g:tagbar_sort = 0
 
 set tags=tags;
 set autochdir
@@ -232,8 +236,8 @@ let g:lightline = {
 			\ 'component': {
 			\ 'readonly': '%{&readonly?"\u2b64":""}',
 			\ },
-		    \ 'separator': { 'left': "\u2b80", 'right': "\u2b82" },
-		    \ 'subseparator': { 'left': "\u2b81", 'right': "\u2b83" }
+		    \ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+		    \ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" }
 			\ }
 
 let g:C_GuiSnippetBrowser = 'commandline'
