@@ -67,18 +67,6 @@ xterm*|rxvt*)
 esac
 
 PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
-<<<<<<< HEAD:bashrc
-=======
-function _update_ps1() {
-	PS1="$(~/.lasypig/powerline-shell.py --cwd-max-depth 3 $? 2> /dev/null)"
-}
-
-if [ -z "$SSH_CLIENT" ] && [ -z "$SSH_TTY" ]; then
-	if [ "$TERM" != "linux" ]; then
-		PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
-	fi
-fi
->>>>>>> 561125d836920d67cb89679e9be39dd54564be9a:.bashrc
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
@@ -119,14 +107,12 @@ alias :q='exit'
 alias define='googler -p 127.0.0.1:8087 -n 2 define'
 alias dumpobj='/opt/arm-2009q1/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
 alias xo='xdg-open'
-<<<<<<< HEAD:bashrc
 alias ftpput='ncftpput -u root -p hisome -P 3121'
 alias ftpget='ncftpget -u root -p hisome -P 3121'
 alias pandoc="pandoc --template=$HOME/Templates/template.tex --latex-engine=xelatex"
 alias untar='tar -zxvf'
 #alias ping='prettyping --nolegend'
-=======
->>>>>>> 561125d836920d67cb89679e9be39dd54564be9a:.bashrc
+alias trans='trans -l Chinese'
 
 bind -x '"\C-l":ls -l'
 
@@ -158,13 +144,8 @@ addToPATH /opt/arm-2009q1/bin
 addToPATH /usr/local/texlive/2013/bin/i386-linux
 addToPATH /home/wangxb/misc/node.js/bin
 
-<<<<<<< HEAD:bashrc
 export PYTHONPATH=$(echo /usr/lib/llvm-6.0/build/lib/)
 export LD_LIBRARY_PATH=$(llvm-config-6.0 --libdir)
-=======
-export PYTHONPATH=$(echo /usr/lib/llvm-4.0/build/lib/)
-export LD_LIBRARY_PATH=$(llvm-config-4.0 --libdir)
->>>>>>> 561125d836920d67cb89679e9be39dd54564be9a:.bashrc
 
 if [ -f /etc/bash_completion ]; then
 	. /etc/bash_completion
@@ -294,7 +275,6 @@ bind -x '"\C-l":ls -l'
 # disable CapsLock key
 setxkbmap -option ctrl:nocaps
 
-<<<<<<< HEAD:bashrc
 export GOPATH='/home/wangxb/tmp/Go'
 alias tmux="env TERM=xterm-256color tmux"
 
@@ -312,15 +292,11 @@ alias tmux="env TERM=xterm-256color tmux"
 #if [[ -f ~/.lasypig/mcfly.bash ]]; then
 #	source ~/.lasypig/mcfly.bash
 #fi
-=======
-# fuck gfw
-ps -ef | grep -i XX-Net | grep -iv grep > /dev/null
-if [ $? -gt 0 ]; then
-	/home/wangxb/misc/XX-Net/start 2> /dev/null &
-fi
->>>>>>> 561125d836920d67cb89679e9be39dd54564be9a:.bashrc
 
 export GOPATH='/home/wangxb/tmp/Go'
 alias tmux="env TERM=xterm-256color tmux"
 
-eval "$(thefuck --alias)"
+calc() { awk "BEGIN{ print $* }" ;}
+sxh () { for i in "${@:2}"; do ssh "$i" "$1"; done ; }
+complete -o default -o nospace -W "$(grep -i -e '^host ' ~/.ssh/config | awk '{print substr($0, index($0,$2))}' ORS=' ')" ssh scp sftp
+
