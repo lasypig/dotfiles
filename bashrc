@@ -113,7 +113,6 @@ alias pandoc="pandoc --template=$HOME/Templates/template.tex --latex-engine=xela
 alias untar='tar -zxvf'
 #alias ping='prettyping --nolegend'
 alias trans='trans -l Chinese'
-alias gsip='sshpass -p hisome ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -p 3122 root@218.108.40.230 "fs_cli -x list_users | grep 3333 | sed \"s/^.*received=//\" | sed \"s/;fs_nat=.*$//\" | sed \"s/:.*$//\""'
 
 bind -x '"\C-l":ls -l'
 

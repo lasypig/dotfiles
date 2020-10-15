@@ -33,20 +33,19 @@ set hidden
 runtime macros/matchit.vim
 set wildmenu
 set wildmode=list:longest
+vnoremap <LeftRelease> "*ygv
 
 set ignorecase
 set smartcase
 set inccommand=nosplit
 set mouse=a
+"set shortmess-=S
 
 silent let g:cur_term = system('ps -p $(ps -p $(ps -p $(ps -p $$ -o ppid=) -o ppid=) -o ppid=) o args=')
-if g:cur_term =~ "gnome-terminal"
-	set termguicolors
-endif
+silent let g:clangso = system('locate libclang.so | head -n1')
+silent let g:clangpath = strpart(g:clangso, 0, strridx( g:clangso, '/' ))
 
-if  g:cur_term =~ "tmux"
-	set termguicolors
-endif
+set termguicolors
 
 noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
 noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
@@ -56,40 +55,51 @@ nnoremap <space> za
 vnoremap <space> za
 
 set t_Co=256
-let $NVIM_TUI_ENABLE_CURSOR_SHAPE = 0
+set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
+			\,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
+			\,sm:block-blinkwait175-blinkoff150-blinkon175
 
+"if g:cur_term !~ "sshd"
+"endif
 "======================================
 " VIM PLUG
 "======================================
 let g:plug_window = 'new'
 call plug#begin()
-Plug 'scrooloose/nerdtree'
-Plug 'Xuyuanp/nerdtree-git-plugin'
-if !exists('g:gui_oni')
-	Plug 'itchyny/lightline.vim'
-endif
+"Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'itchyny/lightline.vim'
 Plug 'ryanoasis/vim-devicons'
-Plug 'timakro/vim-searchant'
-Plug 'leafgarland/typescript-vim'
+Plug 'preservim/nerdtree'
 Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
-Plug 'lilydjwg/colorizer'
+"Plug 'lasypig/chromatica.nvim'
+Plug 'timakro/vim-searchant'
+"Plug 'leafgarland/typescript-vim'
+"Plug 'lilydjwg/colorizer'
 Plug 'AndrewRadev/splitjoin.vim'
-Plug 'lasypig/chromatica.nvim'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'tbodt/deoplete-tabnine', { 'do': './install.sh' }
 Plug 'zchee/libclang-python3'
 Plug 'joshdick/onedark.vim'
 Plug 'zanglg/nova.vim'
 Plug 'WolfgangMehner/c-support'
 Plug 'jiangmiao/auto-pairs'
 Plug 'mileszs/ack.vim'
-Plug 'qpkorr/vim-bufkill'
+"Plug 'qpkorr/vim-bufkill'
 Plug 'MaxSt/FlatColor'
 Plug 'majutsushi/tagbar'
-Plug 'w0rp/ale'
+"Plug 'dense-analysis/ale'
 Plug 'godlygeek/tabular'
 Plug 'mattn/vim-maketable'
 Plug 'mhinz/vim-lookup'
-Plug 'tweekmonster/startuptime.vim'
+"Plug 'tweekmonster/startuptime.vim'
+Plug 'lervag/vimtex'
+Plug 'voldikss/vim-translator'
+Plug 'voldikss/vim-floaterm'
+Plug 'IMOKURI/line-number-interval.nvim'
+Plug 'neovim/nvim-lsp'
+Plug 'weilbith/nvim-lsp-smag'
+Plug 'jackguo380/vim-lsp-cxx-highlight'
+"Plug 'liuchengxu/vista.vim'
 call plug#end()
 
 if has("gui_running")
@@ -104,7 +114,7 @@ if has("gui_running")
 		set guifont=Consolas\ 11
 	endif
 else
-	if exists('g:gui_oni')
+	if exists('g:gui_ond')
 		set noruler
 		set laststatus=0
 		colorscheme onedark
@@ -113,14 +123,65 @@ else
 	endif
 endif
 
+let g:tex_flavor='xelatex'
+let g:vimtex_view_method='zathura'
+let g:vimtex_quickfix_mode=0
+"set conceallevel=1
+"let g:tex_conceal='abdmg'
 
+filetype on
 "===========================
 " tagbar
 "===========================
 if !&diff
 	autocmd FileType c,cpp,h,vim,py,lua nested :TagbarOpen
+	"autocmd FileType c,cpp,h :Vista
 endif
 let g:tagbar_sort = 0
+
+"===========================
+"  nvim-lsp
+"===========================
+lua << EOF
+local nvim_lsp = require'nvim_lsp'
+nvim_lsp.clangd.setup {
+    cmd = { "clangd-9", "--background-index" };
+    filetypes = { "c", "cpp", "objc", "objcpp" };
+    root_dir = nvim_lsp.util.root_pattern("compile_commands.json", ".git");
+}
+EOF
+lua << EOF
+local nvim_lsp = require'nvim_lsp'
+nvim_lsp.ccls.setup {
+    cmd = { "ccls" };
+    filetypes = { "c", "cpp", "objc", "objcpp" };
+    root_dir = nvim_lsp.util.root_pattern("compile_commands.json", ".git");
+	init_options = {
+		highlight = {
+			lsRanges = true;
+		}
+	};
+}
+EOF
+
+"===========================
+" vista
+"===========================
+"let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
+"let g:vista_default_executive = 'ctags'
+"let g:vista_executive_for = {
+"  \ 'c': 'nvim_lsp',
+"  \ 'h': 'nvim_lsp',
+"  \ 'cpp': 'nvim_lsp',
+"  \ }
+"
+"let g:vista_sidebar_width = 45
+"let g:vista_stay_on_open = 0
+"let g:vista#renderer#enable_icon= 1
+"let g:vista#renderer#icons = {
+"\   "function": "\uf794",
+"\   "variable": "\uf71b",
+"\  }
 
 set tags=tags;
 set autochdir
@@ -133,11 +194,13 @@ set fileencodings=ucs-bom,utf-8,gbk,cp936
 " my map
 map <F2> ggVG=
 
+"===========================
 " NERDTree
+"===========================
 let NERDChristmasTree=1
-let NERDTreeIgnore=['\.d$', '\~$','\.a$','\.o$','tags$',] 
-"let g:NERDTreeDirArrowExpandable = '▶'
-"let g:NERDTreeDirArrowCollapsible = '▼ '
+"let NERDTreeMinimalUI=1
+let NERDTreeDirArrows=1
+let NERDTreeIgnore=['\.d$','\~$','\.lo','\.a$','\.o$','tags$'] 
 "let g:NERDTreeDisableFileExtensionHighlight = 1
 "let g:NERDTreeExtensionHighlightColor = {}
 let g:NERDSpaceDelims = 1
@@ -151,9 +214,9 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTree
 
 " C-support 
 let g:C_UseTool_doxygen = 'yes'
-let g:C_LocalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
-let g:C_GlobalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
-let g:C_CustomTemplateFile = $HOME.'/.config/nvim/templates/Templates'
+"let g:C_LocalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
+"let g:C_GlobalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
+"let g:C_CustomTemplateFile = $HOME.'/.config/nvim/templates/Templates'
 
 autocmd WinEnter *  call shy#TerminalAutoInsert()
 
@@ -261,17 +324,10 @@ if has('persistent_undo')
 endif
 
 "===========================
-" youdao dictionary
-"===========================
-vnoremap <silent> T :<C-u>Ydv<CR>
-nnoremap <silent> T :<C-u>Ydc<CR>
-noremap <leader>yd :<C-u>Yde<CR>
-
-"===========================
 " chromatica
 "===========================
 let g:diminactive_buftype_blacklist = []
-let g:chromatica#libclang_path='/usr/lib/llvm-4.0/lib'
+let g:chromatica#libclang_path=g:clangpath
 let g:chromatica#enable_at_startup=1
 let g:chromatica#highlight_feature_level=1
 let g:chromatica#responsive_mode=0
@@ -300,16 +356,22 @@ function! s:check_back_space() abort "{{{
 	return !col || getline('.')[col - 1]  =~ '\s'
 endfunction"}}}
 
+call deoplete#custom#var('tabnine', {
+\ 'line_limit': 500,
+\ 'max_num_results': 20,
+\ })
+
 "===========================
 " Asynchronous Lint Engine
 "===========================
-filetype off
-let &runtimepath.=',~/.config/nvim/plugged/ale'
-filetype plugin on
-let g:ale_sign_warning = '->'
-let g:ale_linters = { 
-			\ 'c': ['clang'],
-			\}
+"filetype off
+"let &runtimepath.=',~/.config/nvim/plugged/ale'
+"filetype plugin on
+"let g:ale_set_balloons = 1
+"let g:ale_sign_warning = '->'
+"let g:ale_linters = { 
+"			\ 'c': ['clang','gcc'],
+"			\}
 
 "===========================
 " nerdtree-syntax-highlight
@@ -320,11 +382,38 @@ let g:NERDTreeDisablePatternMatchHighlight = 1
 "===========================
 " deoplete-clang
 "===========================
-let g:deoplete#sources#clang#libclang_path = '/usr/lib/llvm-4.0/lib/libclang.so'
-let g:deoplete#sources#clang#clang_header = '/usr/lib/llvm-4.0/clang'
+let g:deoplete#sources#clang#libclang_path = g:clangso
+"let g:deoplete#sources#clang#clang_header = '/usr/lib/llvm-6.0/clang'
 
 "===========================
 " vim-lookup
 "===========================
 autocmd FileType vim nnoremap <buffer><silent> <cr>  :call lookup#lookup()<cr>
+
+"===========================
+" vim-translator
+"===========================
+let g:translator_default_engines=['youdao', 'google']
+nmap <silent> T <Plug>TranslateW
+vmap <silent> T <Plug>TranslateWV
+
+"===========================
+" vim-floaterm
+"===========================
+let g:floaterm_type = 'floating'
+let g:floaterm_width = 160
+let g:floaterm_height = 50
+let g:floaterm_winblend = 1
+let g:floaterm_position = 'center'
+noremap  <silent> <F4>    :FloatermToggle<CR>i
+noremap! <silent> <F4>    <Esc>:FloatermToggle<CR>i
+tnoremap <silent> <F4>    <C-\><C-n>:FloatermToggle<CR>
+
+"===========================
+"  line-number-interval.nvim
+"===========================
+let g:line_number_interval#enable_at_startup = 1
+let g:line_number_interval = 10
+
+
 
