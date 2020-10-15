@@ -105,7 +105,10 @@ alias svnadd="svn status | grep \"^?\" | awk '{print $2}' | xargs svn add "
 alias ctags='ctags -R --c-kinds=+p  --fields=+ias --extra=+q'
 alias :q='exit'
 alias define='googler -p 127.0.0.1:8087 -n 2 define'
-alias dumpobj='/opt/arm-2009q1/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
+alias dump2014obj='/opt/arm-2014.05/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
+alias dumparmobj='/opt/arm-2009q1/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
+alias dumphisiobj='arm-hisiv400-linux-objdump -S -l -z  -j .text'
+alias dumpobj='objdump -S -l -z  -j .text'
 alias xo='xdg-open'
 alias ftpput='ncftpput -u root -p hisome -P 3121'
 alias ftpget='ncftpget -u root -p hisome -P 3121'
@@ -113,6 +116,10 @@ alias pandoc="pandoc --template=$HOME/Templates/template.tex --latex-engine=xela
 alias untar='tar -zxvf'
 #alias ping='prettyping --nolegend'
 alias trans='trans -l Chinese'
+alias svnchangelog='svn propedit --revprop svn:log'
+alias svndiff='svn --diff-cmd=/home/wangxb/.subversion/vimdiff.sh diff'
+alias hicp='sshpass scp -P 3122 -o User=root'
+alias hinvr='sshpass ssh -l root -p 3122'
 
 bind -x '"\C-l":ls -l'
 
@@ -299,4 +306,41 @@ alias tmux="env TERM=xterm-256color tmux"
 calc() { awk "BEGIN{ print $* }" ;}
 sxh () { for i in "${@:2}"; do ssh "$i" "$1"; done ; }
 complete -o default -o nospace -W "$(grep -i -e '^host ' ~/.ssh/config | awk '{print substr($0, index($0,$2))}' ORS=' ')" ssh scp sftp
+
+ACK=`which ack-grep`
+function grepc()
+{
+	if [ $# -eq 1 ]; then
+		if [ -n "$ACK" ]; then
+			$ACK --follow --cc "$1" | $ACK -v "^$"
+		else
+			grep --color=auto -n -r --include="*.[c]" --include="*.cpp" "$1" *
+		fi
+	fi
+
+}
+
+function greph()
+{
+	if [ $# -eq 1 ]; then
+		if [ -n "$ACK" ]; then
+			$ACK --follow --hh "$1" | $ACK -v "^$"
+		else
+			grep --color=auto -n -r --include="*.h" --include="*.hh" --include="*.hpp" "$1" *
+		fi
+	fi
+
+}
+
+function grepm()
+{
+	if [ $# -eq 1 ]; then
+		if [ -n "$ACK" ]; then
+			$ACK --follow --cc "$1" | $ACK -v "^$"
+		else
+			grep --color=auto -n -r --include="*.mk" --include="Makefile" "$1" *
+		fi
+	fi
+
+}
 
