@@ -99,7 +99,6 @@ alias l.='ls -d .?*'
 alias findn='find . -name'
 alias LS='find -mount -maxdepth 1 -printf "%.5m %10M %#9u:%-9g %#5U:%-5G %TF_%TR %CF_%CR %AF_%AR %#15s [%Y] %p\n" 2>/dev/null'
 alias brt='java -jar ~/.lasypig/BranchMaster.jar'
-alias ack='ack-grep'
 alias gvim='gvim 2> /dev/null'
 alias svnadd="svn status | grep \"^?\" | awk '{print $2}' | xargs svn add "
 alias ctags='ctags -R --c-kinds=+p  --fields=+ias --extra=+q'
@@ -120,6 +119,7 @@ alias svnchangelog='svn propedit --revprop svn:log'
 alias svndiff='svn --diff-cmd=/home/wangxb/.subversion/vimdiff.sh diff'
 alias hicp='sshpass scp -P 3122 -o User=root'
 alias hinvr='sshpass ssh -l root -p 3122'
+alias foobar2000='mpg321'
 
 bind -x '"\C-l":ls -l'
 
@@ -150,6 +150,7 @@ addToPATH /home/wangxb/.lasypig
 addToPATH /opt/arm-2009q1/bin
 addToPATH /usr/local/texlive/2013/bin/i386-linux
 addToPATH /home/wangxb/misc/node.js/bin
+addToPATH /opt/hisi-linux/x86-arm/arm-hisiv400-linux/target/bin
 
 export PYTHONPATH=$(echo /usr/lib/llvm-6.0/build/lib/)
 export LD_LIBRARY_PATH=$(llvm-config-6.0 --libdir)
@@ -307,12 +308,12 @@ calc() { awk "BEGIN{ print $* }" ;}
 sxh () { for i in "${@:2}"; do ssh "$i" "$1"; done ; }
 complete -o default -o nospace -W "$(grep -i -e '^host ' ~/.ssh/config | awk '{print substr($0, index($0,$2))}' ORS=' ')" ssh scp sftp
 
-ACK=`which ack-grep`
+ACK=`which ack`
 function grepc()
 {
 	if [ $# -eq 1 ]; then
 		if [ -n "$ACK" ]; then
-			$ACK --follow --cc "$1" | $ACK -v "^$"
+			$ACK --follow --ignore-dir=.ccls-cache --cc "$1" | $ACK -v "^$"
 		else
 			grep --color=auto -n -r --include="*.[c]" --include="*.cpp" "$1" *
 		fi
@@ -324,7 +325,7 @@ function greph()
 {
 	if [ $# -eq 1 ]; then
 		if [ -n "$ACK" ]; then
-			$ACK --follow --hh "$1" | $ACK -v "^$"
+			$ACK --follow --ignore-dir=.ccls-cache --hh "$1" | $ACK -v "^$"
 		else
 			grep --color=auto -n -r --include="*.h" --include="*.hh" --include="*.hpp" "$1" *
 		fi
@@ -336,7 +337,7 @@ function grepm()
 {
 	if [ $# -eq 1 ]; then
 		if [ -n "$ACK" ]; then
-			$ACK --follow --cc "$1" | $ACK -v "^$"
+			$ACK --follow --ignore-dir=.ccls-cache --make "$1" | $ACK -v "^$"
 		else
 			grep --color=auto -n -r --include="*.mk" --include="Makefile" "$1" *
 		fi
