@@ -41,7 +41,7 @@ set inccommand=nosplit
 set mouse=a
 "set shortmess-=S
 
-silent let g:cur_term = system('ps -p $(ps -p $(ps -p $(ps -p $$ -o ppid=) -o ppid=) -o ppid=) o args=')
+silent let g:cur_term = system('ps -p $(ps -p $(ps -p $PPID -o ppid=) -o ppid=) o args=')
 silent let g:clangso = system('locate libclang.so | head -n1')
 silent let g:clangpath = strpart(g:clangso, 0, strridx( g:clangso, '/' ))
 
@@ -69,6 +69,7 @@ call plug#begin()
 "Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'itchyny/lightline.vim'
 Plug 'ryanoasis/vim-devicons'
+"Plug 'https://github.com/adelarsq/vim-devicons-emoji'
 Plug 'preservim/nerdtree'
 Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
 "Plug 'lasypig/chromatica.nvim'
@@ -77,7 +78,8 @@ Plug 'timakro/vim-searchant'
 "Plug 'lilydjwg/colorizer'
 Plug 'AndrewRadev/splitjoin.vim'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'tbodt/deoplete-tabnine', { 'do': './install.sh' }
+"Plug 'tbodt/deoplete-tabnine', { 'do': './install.sh' }
+Plug 'codota/tabnine-vim'
 Plug 'zchee/libclang-python3'
 Plug 'joshdick/onedark.vim'
 Plug 'zanglg/nova.vim'
@@ -96,10 +98,13 @@ Plug 'lervag/vimtex'
 Plug 'voldikss/vim-translator'
 Plug 'voldikss/vim-floaterm'
 Plug 'IMOKURI/line-number-interval.nvim'
-Plug 'neovim/nvim-lsp'
+Plug 'neovim/nvim-lspconfig'
 Plug 'weilbith/nvim-lsp-smag'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
 "Plug 'liuchengxu/vista.vim'
+Plug 'embark-theme/vim', { 'as': 'embark' }
+Plug 'itchyny/landscape.vim'
+Plug 'github/copilot.vim'
 call plug#end()
 
 if has("gui_running")
@@ -143,7 +148,7 @@ let g:tagbar_sort = 0
 "  nvim-lsp
 "===========================
 lua << EOF
-local nvim_lsp = require'nvim_lsp'
+local nvim_lsp = require'lspconfig'
 nvim_lsp.clangd.setup {
     cmd = { "clangd-9", "--background-index" };
     filetypes = { "c", "cpp", "objc", "objcpp" };
@@ -151,7 +156,7 @@ nvim_lsp.clangd.setup {
 }
 EOF
 lua << EOF
-local nvim_lsp = require'nvim_lsp'
+local nvim_lsp = require'lspconfig'
 nvim_lsp.ccls.setup {
     cmd = { "ccls" };
     filetypes = { "c", "cpp", "objc", "objcpp" };
@@ -163,25 +168,6 @@ nvim_lsp.ccls.setup {
 	};
 }
 EOF
-
-"===========================
-" vista
-"===========================
-"let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
-"let g:vista_default_executive = 'ctags'
-"let g:vista_executive_for = {
-"  \ 'c': 'nvim_lsp',
-"  \ 'h': 'nvim_lsp',
-"  \ 'cpp': 'nvim_lsp',
-"  \ }
-"
-"let g:vista_sidebar_width = 45
-"let g:vista_stay_on_open = 0
-"let g:vista#renderer#enable_icon= 1
-"let g:vista#renderer#icons = {
-"\   "function": "\uf794",
-"\   "variable": "\uf71b",
-"\  }
 
 set tags=tags;
 set autochdir
@@ -341,6 +327,7 @@ hi chromaticaException ctermfg=166 gui=bold guifg=#B58900
 hi chromaticaCast      ctermfg=35  gui=bold guifg=#719E07
 hi link chromaticaInclusionDirective cInclude
 hi link chromaticaMemberRefExprCall  Type
+hi CopilotSuggestion guifg=#555555 ctermfg=8
 
 "===========================
 " YCM desn't support 32-bit system
@@ -355,23 +342,6 @@ function! s:check_back_space() abort "{{{
 	let col = col('.') - 1
 	return !col || getline('.')[col - 1]  =~ '\s'
 endfunction"}}}
-
-call deoplete#custom#var('tabnine', {
-\ 'line_limit': 500,
-\ 'max_num_results': 20,
-\ })
-
-"===========================
-" Asynchronous Lint Engine
-"===========================
-"filetype off
-"let &runtimepath.=',~/.config/nvim/plugged/ale'
-"filetype plugin on
-"let g:ale_set_balloons = 1
-"let g:ale_sign_warning = '->'
-"let g:ale_linters = { 
-"			\ 'c': ['clang','gcc'],
-"			\}
 
 "===========================
 " nerdtree-syntax-highlight
@@ -393,7 +363,7 @@ autocmd FileType vim nnoremap <buffer><silent> <cr>  :call lookup#lookup()<cr>
 "===========================
 " vim-translator
 "===========================
-let g:translator_default_engines=['youdao', 'google']
+let g:translator_default_engines=['bing', 'haici']
 nmap <silent> T <Plug>TranslateW
 vmap <silent> T <Plug>TranslateWV
 

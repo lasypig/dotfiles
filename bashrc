@@ -116,10 +116,13 @@ alias untar='tar -zxvf'
 #alias ping='prettyping --nolegend'
 alias trans='trans -l Chinese'
 alias svnchangelog='svn propedit --revprop svn:log'
+alias svneditignores='svn pedit svn:global-ignores .'
 alias svndiff='svn --diff-cmd=/home/wangxb/.subversion/vimdiff.sh diff'
 alias hicp='sshpass scp -P 3122 -o User=root'
 alias hinvr='sshpass ssh -l root -p 3122'
 alias foobar2000='mpg321'
+alias df='df -xsquashfs'
+alias playg711='ffplay -nodisp -f alaw -ac 1 -ar 8000 -i'
 
 bind -x '"\C-l":ls -l'
 
@@ -147,7 +150,7 @@ function addToPATH {
 }
 addToPATH /lib/x86_64-linux-gnu
 addToPATH /home/wangxb/.lasypig
-addToPATH /opt/arm-2009q1/bin
+addToPATH /opt/arm-2014.05/bin
 addToPATH /usr/local/texlive/2013/bin/i386-linux
 addToPATH /home/wangxb/misc/node.js/bin
 addToPATH /opt/hisi-linux/x86-arm/arm-hisiv400-linux/target/bin
@@ -252,7 +255,7 @@ function svn
 			fi
 			if   [[ $RL =~ ^r[0-9] ]]; then C="";
 			elif [[ $RL =~ ^-- ]]; then C="\033[35m";
-			else C="\033[34m";
+			else C="\033[92m";
 			fi
 
 			echo -e "$C${RL/\\/\\\\}\033[0m\033[0;0m"
@@ -343,5 +346,14 @@ function grepm()
 		fi
 	fi
 
+}
+
+. "$HOME/.cargo/env"
+
+# enable headphone
+function fixheadphone()
+{
+	pactl set-card-profile 0 output:analog-stereo
+	pactl set-sink-port alsa_output.pci-0000_00_1f.3.analog-stereo analog-output-headphones
 }
 
