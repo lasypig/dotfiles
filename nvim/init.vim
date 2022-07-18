@@ -38,8 +38,12 @@ vnoremap <LeftRelease> "*ygv
 set ignorecase
 set smartcase
 set inccommand=nosplit
-set mouse=a
+set mouse=nvi
 "set shortmess-=S
+
+set winbar=%F
+set laststatus=3
+set mousescroll=ver:5,hor:2
 
 silent let g:cur_term = system('ps -p $(ps -p $(ps -p $PPID -o ppid=) -o ppid=) o args=')
 silent let g:clangso = system('locate libclang.so | head -n1')
@@ -51,6 +55,7 @@ noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
 noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
 
 nnoremap <silent> zf zf%
+nnoremap gs :%s//<Left>
 nnoremap <space> za
 vnoremap <space> za
 
@@ -65,26 +70,24 @@ set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
 " VIM PLUG
 "======================================
 let g:plug_window = 'new'
-call plug#begin()
+call plug#begin(stdpath('config') . '/plugged')
 "Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'itchyny/lightline.vim'
 Plug 'ryanoasis/vim-devicons'
 "Plug 'https://github.com/adelarsq/vim-devicons-emoji'
 Plug 'preservim/nerdtree'
 Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
-"Plug 'lasypig/chromatica.nvim'
 Plug 'timakro/vim-searchant'
 "Plug 'leafgarland/typescript-vim'
 "Plug 'lilydjwg/colorizer'
 Plug 'AndrewRadev/splitjoin.vim'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-"Plug 'tbodt/deoplete-tabnine', { 'do': './install.sh' }
 Plug 'codota/tabnine-vim'
 Plug 'zchee/libclang-python3'
 Plug 'joshdick/onedark.vim'
 Plug 'zanglg/nova.vim'
 Plug 'WolfgangMehner/c-support'
-Plug 'jiangmiao/auto-pairs'
+Plug 'echasnovski/mini.nvim'
 Plug 'mileszs/ack.vim'
 "Plug 'qpkorr/vim-bufkill'
 Plug 'MaxSt/FlatColor'
@@ -98,13 +101,17 @@ Plug 'lervag/vimtex'
 Plug 'voldikss/vim-translator'
 Plug 'voldikss/vim-floaterm'
 Plug 'IMOKURI/line-number-interval.nvim'
+Plug 'williamboman/nvim-lsp-installer'
 Plug 'neovim/nvim-lspconfig'
 Plug 'weilbith/nvim-lsp-smag'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
+"Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 "Plug 'liuchengxu/vista.vim'
 Plug 'embark-theme/vim', { 'as': 'embark' }
 Plug 'itchyny/landscape.vim'
 Plug 'github/copilot.vim'
+"Plug 'stevearc/dressing.nvim'
+Plug 'mtdl9/vim-log-highlighting'
 call plug#end()
 
 if has("gui_running")
@@ -139,28 +146,40 @@ filetype on
 " tagbar
 "===========================
 if !&diff
-	autocmd FileType c,cpp,h,vim,py,lua nested :TagbarOpen
-	"autocmd FileType c,cpp,h :Vista
+   autocmd FileType c,cpp,h,vim,py,lua nested :TagbarOpen
 endif
 let g:tagbar_sort = 0
+let g:tagbar_type_c = {
+    \ 'kinds' : [
+        \ 'd:macros:1:0',
+        \ 'p:prototypes:1:0',
+        \ 'g:enums:1:0',
+        \ 'e:enumerators:1:0',
+        \ 't:typedefs:1:0',
+        \ 's:structs:1:0',
+        \ 'u:unions:1:0',
+        \ 'm:members:0:0',
+        \ 'v:variables:1:0',
+        \ 'f:functions',
+        \ '?:unknown',
+    \ ],
+\ }
 
-"===========================
-"  nvim-lsp
-"===========================
-lua << EOF
-local nvim_lsp = require'lspconfig'
-nvim_lsp.clangd.setup {
-    cmd = { "clangd-9", "--background-index" };
-    filetypes = { "c", "cpp", "objc", "objcpp" };
-    root_dir = nvim_lsp.util.root_pattern("compile_commands.json", ".git");
-}
-EOF
 lua << EOF
 local nvim_lsp = require'lspconfig'
 nvim_lsp.ccls.setup {
     cmd = { "ccls" };
     filetypes = { "c", "cpp", "objc", "objcpp" };
     root_dir = nvim_lsp.util.root_pattern("compile_commands.json", ".git");
+	init_options = {
+		highlight = {
+			lsRanges = true;
+		}
+	};
+}
+nvim_lsp.texlab.setup {
+    cmd = { "texlab" };
+    filetypes = { "tex" };
 	init_options = {
 		highlight = {
 			lsRanges = true;
@@ -236,9 +255,9 @@ let g:C_GuiSnippetBrowser = 'commandline'
 " Bind command to open vimrc file.
 nnoremap <Leader>vc :e $MYVIMRC<CR>
 
-" set the type of file without extention to txt
+" set the type of file without extention to log
 if strlen(&filetype) == 0
-	set filetype=txt
+	set filetype=log
 endif
 
 cmap w!! w !sudo  tee > /dev/null %
@@ -312,11 +331,11 @@ endif
 "===========================
 " chromatica
 "===========================
-let g:diminactive_buftype_blacklist = []
-let g:chromatica#libclang_path=g:clangpath
-let g:chromatica#enable_at_startup=1
-let g:chromatica#highlight_feature_level=1
-let g:chromatica#responsive_mode=0
+"let g:diminactive_buftype_blacklist = []
+"let g:chromatica#libclang_path=g:clangpath
+"let g:chromatica#enable_at_startup=1
+"let g:chromatica#highlight_feature_level=1
+"let g:chromatica#responsive_mode=0
 hi Member    ctermfg=166 guifg=#cb4b16
 hi Type      ctermfg=35  guifg=Green
 hi Namespace ctermfg=14  guifg=#006bd2
@@ -328,6 +347,7 @@ hi chromaticaCast      ctermfg=35  gui=bold guifg=#719E07
 hi link chromaticaInclusionDirective cInclude
 hi link chromaticaMemberRefExprCall  Type
 hi CopilotSuggestion guifg=#555555 ctermfg=8
+hi MiniIndentscopeSymbol ctermfg=36  guifg=#008b8b
 
 "===========================
 " YCM desn't support 32-bit system
@@ -385,5 +405,56 @@ tnoremap <silent> <F4>    <C-\><C-n>:FloatermToggle<CR>
 let g:line_number_interval#enable_at_startup = 1
 let g:line_number_interval = 10
 
+"===========================
+"  mini.nvim
+"===========================
+let g:minibase16_disable = v:true
+let g:minibufremove_disable = v:true
+let g:minicomment_disable = v:true
+let g:minicompletion_disable = v:true
+let g:minidoc_disable = v:true
+let g:minifuzzy_disable = v:true
+let g:minijump_disable = v:true
+let g:minimisc_disable = v:true
+let g:minisessions_disable = v:true
+let g:ministarter_disable = v:true
+let g:ministatusline_disable = v:true
+let g:minisurround_disable = v:true
+let g:minitabline_disable = v:true
+let g:minitrailspace_disable = v:true
+lua << EOF
+require('mini.indentscope').setup({});
+require('mini.pairs').setup({});
+require('mini.cursorword').setup({});
+EOF
 
+"===========================
+"  neovim-treesitter
+"===========================
+"lua << EOF
+"require'nvim-treesitter.configs'.setup {
+"  ensure_installed = { "c", "lua" },
+"  sync_install = false,
+"  ignore_install = { "javascript" },
+"  highlight = {
+"    enable = true,
+"    additional_vim_regex_highlighting = false,
+"  },
+"}
+"EOF
 
+"===========================
+"  nvim-lsp-installer
+"===========================
+lua << EOF
+require("nvim-lsp-installer").setup({
+    automatic_installation = true, -- automatically detect which servers to install (based on which servers are set up via lspconfig)
+    ui = {
+        icons = {
+            server_installed = "✓",
+            server_pending = "➜",
+            server_uninstalled = "✗"
+        }
+    }
+})
+EOF
