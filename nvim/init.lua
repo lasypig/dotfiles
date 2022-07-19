@@ -1,4 +1,4 @@
--- ALIAS
+-- ALIAS and functions
 local cmd = vim.cmd
 local fn = vim.fn
 local g = vim.g
@@ -20,6 +20,13 @@ function vmap(shortcut, command)
   map('v', shortcut, command)
 end
 
+function lua_system(command)
+	local p = assert(io.popen(command));
+	local s = assert(p:read("l"));
+	p:close();
+	return s;
+end
+
 -- allow backspacing over everything in insert mode
 opt.backspace = indent,eol,start
 
@@ -35,10 +42,10 @@ nmap("Q", "gq")
 opt.tabstop = 4
 opt.softtabstop = 4
 opt.shiftwidth = 4
-cmd([[set noexpandtab]])
+vim.bo.noexpandtab = true
 opt.number = true
--- opt.relativenumber = true
-cmd([[set cursorline!]])
+-- vim.wo.relativenumber = true
+vim.wo.cursorline = true
 -- opt.lazyredraw = true
 
 -- opt.colorcolumn = 80
@@ -48,7 +55,8 @@ opt.showmatch = true
 cmd([[set nobackup]])
 cmd([[set nowb]])
 cmd([[set noswapfile]])
-cmd([[set listchars=tab:\┆\ ,extends:>,precedes:<]])
+--cmd([[set listchars=tab:\┆\ ,extends:>,precedes:]])
+opt.listchars = { tab = '┆ ', extends = '>', precedes = '<' }
 
 opt.hidden = true
 cmd('runtime macros/matchit.vim')
@@ -66,9 +74,9 @@ opt.winbar = '%F'
 opt.laststatus = 3
 opt.mousescroll = 'ver:5,hor:2'
 
-g.cur_term = os.execute('ps -p $(ps -p $(ps -p $PPID -o ppid=) -o ppid=) o args=')
-g.clangso = os.execute('locate libclang.so | head -n1')
-g.clangpath = fn.strpart(g.clangso, 0, fn.strridx( g.clangso, '/' ))
+g.cur_term = lua_system('ps -p $(ps -p $(ps -p $PPID -o ppid=) -o ppid=) o args=')
+g.clangpath = lua_system('llvm-config --libdir')
+g.clangso = g.clangpath .. "/libclang.so"
 
 opt.termguicolors = true
 
@@ -77,27 +85,26 @@ cmd("noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')")
 
 nmap("zf", "zf%")
 nmap("gs", ":%s//<Left>") 
-nmap( "<space>", "za")
+nmap("<space>", "za")
 vmap("<space>", "za")
 
-cmd([[set t_Co=256]])
 opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175"
 
 -- VIM PLUG
-cmd([[
-let g:plug_window = 'new'
-call plug#begin(stdpath('config') . '/plugged')
-"Plug 'Xuyuanp/nerdtree-git-plugin'
+local Plug = vim.fn['plug#']
+g.plug_window = 'new'
+vim.call('plug#begin', fn.stdpath('config') .. '/plugged')
+-- Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'itchyny/lightline.vim'
 Plug 'ryanoasis/vim-devicons'
-"Plug 'https://github.com/adelarsq/vim-devicons-emoji'
+-- Plug 'https://github.com/adelarsq/vim-devicons-emoji'
 Plug 'preservim/nerdtree'
 Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plug 'timakro/vim-searchant'
-"Plug 'leafgarland/typescript-vim'
-"Plug 'lilydjwg/colorizer'
+-- Plug 'leafgarland/typescript-vim'
+-- Plug 'lilydjwg/colorizer'
 Plug 'AndrewRadev/splitjoin.vim'
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug ('Shougo/deoplete.nvim', { ['do'] = function() cmd(':UpdateRemotePlugins') end })
 Plug 'codota/tabnine-vim'
 Plug 'zchee/libclang-python3'
 Plug 'joshdick/onedark.vim'
@@ -105,14 +112,14 @@ Plug 'zanglg/nova.vim'
 Plug 'WolfgangMehner/c-support'
 Plug 'echasnovski/mini.nvim'
 Plug 'mileszs/ack.vim'
-"Plug 'qpkorr/vim-bufkill'
+-- Plug 'qpkorr/vim-bufkill'
 Plug 'MaxSt/FlatColor'
 Plug 'majutsushi/tagbar'
-"Plug 'dense-analysis/ale'
+-- Plug 'dense-analysis/ale'
 Plug 'godlygeek/tabular'
 Plug 'mattn/vim-maketable'
 Plug 'mhinz/vim-lookup'
-"Plug 'tweekmonster/startuptime.vim'
+-- Plug 'tweekmonster/startuptime.vim'
 Plug 'lervag/vimtex'
 Plug 'voldikss/vim-translator'
 Plug 'voldikss/vim-floaterm'
@@ -121,30 +128,29 @@ Plug 'williamboman/nvim-lsp-installer'
 Plug 'neovim/nvim-lspconfig'
 Plug 'weilbith/nvim-lsp-smag'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
-"Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-"Plug 'liuchengxu/vista.vim'
-Plug 'embark-theme/vim', { 'as': 'embark' }
+-- Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+-- Plug 'liuchengxu/vista.vim'
+Plug ('embark-theme/vim', { ['as'] = 'embark' })
 Plug 'itchyny/landscape.vim'
 Plug 'github/copilot.vim'
-"Plug 'stevearc/dressing.nvim'
+-- Plug 'stevearc/dressing.nvim'
 Plug 'mtdl9/vim-log-highlighting'
-call plug#end()
+vim.call('plug#end')
 
-if has("gui_running")
-	set ambiwidth=double
-	colorscheme onedark
-	if has("win32")
-		au GUIEnter * simalt ~x
-		set guifont=Consolas:h10
-		set clipboard=unnamed
+if fn.has("gui_running") == 1 then
+	opt.ambiwidth = "double"
+	cmd([[colorscheme onedark]])
+	if fn.has("win32") == 1 then
+		cmd([[au GUIEnter * simalt ~x]])
+		opt.guifont = "Consolas:h10"
+		opt.clipboard = "unnamed"
 	else
-		au GUIEnter * call shy#MaximizeWindow()
-		set guifont=Consolas\ 11
-	endif
+		cmd([[au GUIEnter * call shy#MaximizeWindow()]])
+		opt.guifont = "Consolas 11"
+	end
 else
-	colorscheme onedark
-endif
-]])
+	cmd([[colorscheme onedark]])
+end
 
 g.tex_flavor = 'xelatex'
 g.vimtex_view_method = 'zathura'
@@ -269,13 +275,12 @@ g.C_GuiSnippetBrowser = 'commandline'
 cmd([[nnoremap <Leader>vc :e $MYVIMRC<CR>]])
 
 --  set the type of file without extention to log
+if fn.strlen(vim.bo.filetype) == 0 then
+	opt.filetype = "log"
+end
+
 cmd([[
-if strlen(&filetype) == 0
-	set filetype=log
-endif
-
 cmap w!! w !sudo  tee > /dev/null %
-
 set path+=$PWD/**
 
 "hilight the char @column 81 in c/h file
@@ -302,16 +307,16 @@ endfun
 
 nnoremap <silent> n :call <SID>nice_next('n')<cr>
 nnoremap <silent> N :call <SID>nice_next('N')<cr>
-
-if has('nvim')
-    tnoremap <Esc> <C-\><C-n>
-	tnoremap <c-h> <C-\><C-n><C-w>h
-	tnoremap <c-j> <C-\><C-n><C-w>j
-	tnoremap <c-k> <C-\><C-n><C-w>k
-	tnoremap <c-l> <C-\><C-n><C-w>l
-endif
-nnoremap t<CR> :below 20sp term://$SHELL<CR>i
 ]])
+
+if fn.has('nvim') == 1 then
+    cmd([[tnoremap <Esc> <C-\><C-n>]])
+	cmd([[tnoremap <c-h> <C-\><C-n><C-w>h]])
+	cmd([[tnoremap <c-j> <C-\><C-n><C-w>j]])
+	cmd([[tnoremap <c-k> <C-\><C-n><C-w>k]])
+	cmd([[tnoremap <c-l> <C-\><C-n><C-w>l]])
+end
+cmd([[nnoremap t<CR> :below 20sp term://$SHELL<CR>i]])
 
 -- ======================================
 --  lightline settings
@@ -336,45 +341,35 @@ let g:lightline = {
 	  \ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
 	  \ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" }
       \ }
-
-
-"persistent undo
-if has('persistent_undo')
-	set undofile
-	set undodir=$HOME/.vim/.undodir
-	set undolevels=1000
-	set undoreload=10000
-endif
 ]])
 
--- ===========================
---  chromatica
--- ===========================
--- let g:diminactive_buftype_blacklist = []
--- let g:chromatica#libclang_path=g:clangpath
--- let g:chromatica#enable_at_startup=1
--- let g:chromatica#highlight_feature_level=1
--- let g:chromatica#responsive_mode=0
-cmd([[
-hi Member    ctermfg=166 guifg=#cb4b16
-hi Type      ctermfg=35  guifg=Green
-hi Namespace ctermfg=14  guifg=#006bd2
-hi Typedef   ctermfg=166 gui=bold guifg=#BBBB00
-hi AutoType  ctermfg=208 guifg=#ff8700
-hi EnumConstant        ctermfg=208 guifg=#ff8700
-hi chromaticaException ctermfg=166 gui=bold guifg=#B58900
-hi chromaticaCast      ctermfg=35  gui=bold guifg=#719E07
-hi link chromaticaInclusionDirective cInclude
-hi link chromaticaMemberRefExprCall  Type
-hi CopilotSuggestion guifg=#555555 ctermfg=8
-hi MiniIndentscopeSymbol ctermfg=36  guifg=#008b8b
-]])
+-- persistent undo
+HOME = os.getenv("HOME")
+if fn.has('persistent_undo') == 1 then
+	opt.undofile = true
+	opt.undodir = HOME .. "/.vim/.undodir"
+	opt.undolevels = 1000
+	opt.undoreload = 10000
+end
+
+vim.api.nvim_set_hl(0, "Member", {ctermfg = 166, fg="#cb4b16"})
+vim.api.nvim_set_hl(0, "Type",      {ctermfg=35,  fg="Green"})
+vim.api.nvim_set_hl(0, "Namespace", {ctermfg=14,  fg="#006bd2"})
+vim.api.nvim_set_hl(0, "Typedef",   {ctermfg=166, bold=true, fg="#BBBB00"})
+vim.api.nvim_set_hl(0, "AutoType",  {ctermfg=208, fg="#ff8700"})
+vim.api.nvim_set_hl(0, "EnumConstant",        {ctermfg=208, fg="#ff8700"})
+vim.api.nvim_set_hl(0, "chromaticaException", {ctermfg=166, bold=true, fg="#B58900"})
+vim.api.nvim_set_hl(0, "chromaticaCast",      {ctermfg=35, bold=true, fg="#719E07"})
+vim.api.nvim_set_hl(0, "CopilotSuggestion", {fg="#555555", ctermfg=8})
+vim.api.nvim_set_hl(0, "MiniIndentscopeSymbol", {ctermfg=36,  fg="#008b8b"})
+cmd([[hi link chromaticaInclusionDirective cInclude]])
+cmd([[hi link chromaticaMemberRefExprCall  Type]])
 
 -- ===========================
 --  YCM desn't support 32-bit system
 -- ===========================
-cmd([[let g:deoplete#enable_at_startup = 1]])
--- let g:deoplete#disable_auto_complete = 1
+vim.g['deoplete#enable_at_startup'] = 1
+-- g['deoplete#disable_auto_complete'] = 1
 cmd([[
 inoremap <silent><expr> <TAB>
 			\ pumvisible() ? "\<C-n>" :
@@ -395,8 +390,8 @@ g.NERDTreeDisablePatternMatchHighlight = 1
 -- ===========================
 --  deoplete-clang
 -- ===========================
-cmd([[let g:deoplete#sources#clang#libclang_path = g:clangso]])
--- let g:deoplete#sources#clang#clang_header = '/usr/lib/llvm-6.0/clang'
+vim.g['deoplete#sources#clang#libclang_path'] = g.clangso
+-- g['deoplete#sources#clang#clang_header'] = '/usr/lib/llvm-6.0/clang'
 
 -- ===========================
 --  vim-lookup
@@ -425,7 +420,7 @@ cmd([[tnoremap <silent> <F4>    <C-\><C-n>:FloatermToggle<CR>]])
 -- ===========================
 --   line-number-interval.nvim
 -- ===========================
-cmd([[let g:line_number_interval#enable_at_startup = 1]])
+g['line_number_interval#enable_at_startup'] = 1
 g.line_number_interval = 10
 
 -- ===========================
@@ -477,3 +472,4 @@ require("nvim-lsp-installer").setup({
         }
     }
 })
+
