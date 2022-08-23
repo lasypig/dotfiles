@@ -316,7 +316,9 @@ function grepc()
 {
 	if [ $# -eq 1 ]; then
 		if [ -n "$ACK" ]; then
-			$ACK --follow --ignore-dir=.ccls-cache --cc "$1" | $ACK -v "^$"
+			wd=${1/#\//\\b}
+			wd=${wd/%\//\\b}
+			$ACK --follow --ignore-dir=.ccls-cache --cc "$wd" | $ACK -v "^$"
 		else
 			grep --color=auto -n -r --include="*.[c]" --include="*.cpp" "$1" *
 		fi
@@ -328,7 +330,9 @@ function greph()
 {
 	if [ $# -eq 1 ]; then
 		if [ -n "$ACK" ]; then
-			$ACK --follow --ignore-dir=.ccls-cache --hh "$1" | $ACK -v "^$"
+			wd=${1/#\//\\b}
+			wd=${wd/%\//\\b}
+			$ACK --follow --ignore-dir=.ccls-cache --hh "$wd" | $ACK -v "^$"
 		else
 			grep --color=auto -n -r --include="*.h" --include="*.hh" --include="*.hpp" "$1" *
 		fi

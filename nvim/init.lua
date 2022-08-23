@@ -4,23 +4,23 @@ local fn = vim.fn
 local g = vim.g
 local opt = vim.opt
 
-function map(mode, shortcut, command)
+local function map(mode, shortcut, command)
   vim.api.nvim_set_keymap(mode, shortcut, command, { noremap = true, silent = true })
 end
 
-function nmap(shortcut, command)
+local function nmap(shortcut, command)
   map('n', shortcut, command)
 end
 
-function imap(shortcut, command)
+local function imap(shortcut, command)
   map('i', shortcut, command)
 end
 
-function vmap(shortcut, command)
+local function vmap(shortcut, command)
   map('v', shortcut, command)
 end
 
-function lua_system(command)
+local function lua_system(command)
 	local p = assert(io.popen(command));
 	local s = assert(p:read("l"));
 	p:close();
@@ -28,7 +28,7 @@ function lua_system(command)
 end
 
 -- allow backspacing over everything in insert mode
-opt.backspace = indent,eol,start
+opt.backspace = {'indent','eol','start'}
 
 opt.autoindent = true	-- always set autoindenting on
 opt.history = 50        -- keep 50 lines of command line history
@@ -36,7 +36,7 @@ opt.ruler = true		-- show the cursor position all the time
 opt.showcmd = true	    -- display incomplete commands
 opt.incsearch = true	-- do incremental searching
 
-nmap("Q", "gq") 
+nmap("Q", "gq")
 
 -- font settings
 opt.tabstop = 4
@@ -52,6 +52,7 @@ vim.wo.cursorline = true
 -- opt.cursorcolumn = true
 opt.wildmenu = true
 opt.showmatch = true
+opt.jumpoptions = "view"
 cmd([[set nobackup]])
 cmd([[set nowb]])
 cmd([[set noswapfile]])
@@ -84,11 +85,17 @@ cmd("noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')")
 cmd("noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')")
 
 nmap("zf", "zf%")
-nmap("gs", ":%s//<Left>") 
+nmap("gs", ":%s//<Left>")
 nmap("<space>", "za")
 vmap("<space>", "za")
 
 opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175"
+
+cmd([[filetype on]])
+--  set the type of file without extention to log
+if fn.strlen(vim.bo.filetype) == 0 then
+	opt.filetype = "log"
+end
 
 -- VIM PLUG
 local Plug = vim.fn['plug#']
@@ -109,7 +116,7 @@ Plug 'codota/tabnine-vim'
 Plug 'zchee/libclang-python3'
 Plug 'joshdick/onedark.vim'
 Plug 'zanglg/nova.vim'
-Plug 'WolfgangMehner/c-support'
+Plug ('WolfgangMehner/c-support', { ['for'] = {'c', 'cpp'} })
 Plug 'echasnovski/mini.nvim'
 Plug 'mileszs/ack.vim'
 -- Plug 'qpkorr/vim-bufkill'
@@ -127,8 +134,8 @@ Plug 'IMOKURI/line-number-interval.nvim'
 Plug 'williamboman/nvim-lsp-installer'
 Plug 'neovim/nvim-lspconfig'
 Plug 'weilbith/nvim-lsp-smag'
-Plug 'jackguo380/vim-lsp-cxx-highlight'
--- Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+-- Plug 'jackguo380/vim-lsp-cxx-highlight'
+Plug ('nvim-treesitter/nvim-treesitter', { ['do'] = function() cmd(':TSUpdate') end } )
 -- Plug 'liuchengxu/vista.vim'
 Plug ('embark-theme/vim', { ['as'] = 'embark' })
 Plug 'itchyny/landscape.vim'
@@ -158,7 +165,6 @@ g.vimtex_quickfix_mode = 0
 -- opt.conceallevel = 1
 -- g.tex_conceal = 'abdmg'
 
-cmd([[filetype on]])
 -- ===========================
 --  tagbar
 -- ===========================
@@ -184,18 +190,35 @@ let g:tagbar_type_c = {
 \ }
 ]])
 
-local nvim_lsp = require'lspconfig'
-nvim_lsp.ccls.setup {
+local lspconfig = require'lspconfig'
+
+-- ===========================
+--   nvim-lsp-installer
+-- ===========================
+require("nvim-lsp-installer").setup({
+    automatic_installation = true, -- automatically detect which servers to install (based on which servers are set up via lspconfig)
+    ui = {
+        icons = {
+            server_installed = "✓",
+            server_pending = "➜",
+            server_uninstalled = "✗"
+        }
+    }
+})
+require("nvim-lsp-installer").setup {}
+
+lspconfig.ccls.setup {
     cmd = { "ccls" };
     filetypes = { "c", "cpp", "objc", "objcpp" };
-    root_dir = nvim_lsp.util.root_pattern("compile_commands.json", ".git");
+    root_dir = lspconfig.util.root_pattern("compile_commands.json", ".git");
 	init_options = {
 		highlight = {
 			lsRanges = true;
 		}
 	};
 }
-nvim_lsp.texlab.setup {
+
+lspconfig.texlab.setup {
     cmd = { "texlab" };
     filetypes = { "tex" };
 	init_options = {
@@ -237,7 +260,6 @@ nmap("<F3>", ":NERDTreeToggle<CR><c-w>h")
 cmd([[autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif]])
 
 --  C-support 
-g.C_UseTool_doxygen = 'yes'
 -- let g:C_LocalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
 -- let g:C_GlobalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
 -- let g:C_CustomTemplateFile = $HOME.'/.config/nvim/templates/Templates'
@@ -256,12 +278,6 @@ nmap( "zz", ":qall<Enter>")
 nmap("<a-left>", "<c-w><")
 nmap("<a-right>", "<c-w>>")
 
-g.DoxygenToolkit_blockHeader = "--------------------------------------------------------------------------"
-g.DoxygenToolkit_blockFooter = "--------------------------------------------------------------------------"
-g.DoxygenToolkit_authorName = "wangxb@hisome.com"
-g.DoxygenToolkit_licenseTag = "Copyright @ Hisome"
-g.DoxygenToolkit_commentType = "C"
-
 --  syntastic
 g.syntastic_check_on_open = 1
 
@@ -273,11 +289,6 @@ g.C_GuiSnippetBrowser = 'commandline'
 
 --  Bind command to open vimrc file.
 cmd([[nnoremap <Leader>vc :e $MYVIMRC<CR>]])
-
---  set the type of file without extention to log
-if fn.strlen(vim.bo.filetype) == 0 then
-	opt.filetype = "log"
-end
 
 cmd([[
 cmap w!! w !sudo  tee > /dev/null %
@@ -352,18 +363,40 @@ if fn.has('persistent_undo') == 1 then
 	opt.undoreload = 10000
 end
 
+-- ===========================
+--   custom highlight
+-- ===========================
 vim.api.nvim_set_hl(0, "Member", {ctermfg = 166, fg="#cb4b16"})
+vim.api.nvim_set_hl(0, "White", {ctermfg = 37, fg="#FFFFFF"})
 vim.api.nvim_set_hl(0, "Type",      {ctermfg=35,  fg="Green"})
 vim.api.nvim_set_hl(0, "Namespace", {ctermfg=14,  fg="#006bd2"})
 vim.api.nvim_set_hl(0, "Typedef",   {ctermfg=166, bold=true, fg="#BBBB00"})
 vim.api.nvim_set_hl(0, "AutoType",  {ctermfg=208, fg="#ff8700"})
 vim.api.nvim_set_hl(0, "EnumConstant",        {ctermfg=208, fg="#ff8700"})
-vim.api.nvim_set_hl(0, "chromaticaException", {ctermfg=166, bold=true, fg="#B58900"})
-vim.api.nvim_set_hl(0, "chromaticaCast",      {ctermfg=35, bold=true, fg="#719E07"})
 vim.api.nvim_set_hl(0, "CopilotSuggestion", {fg="#555555", ctermfg=8})
 vim.api.nvim_set_hl(0, "MiniIndentscopeSymbol", {ctermfg=36,  fg="#008b8b"})
-cmd([[hi link chromaticaInclusionDirective cInclude]])
-cmd([[hi link chromaticaMemberRefExprCall  Type]])
+
+-- ===========================
+--   neovim-treesitter
+-- ===========================
+require'nvim-treesitter.configs'.setup {
+	ensure_installed = { "c", "lua" },
+	sync_install = false,
+	ignore_install = { "javascript" },
+	highlight = {
+		enable = true,
+		additional_vim_regex_highlighting = false,
+	},
+}
+
+require"nvim-treesitter.highlight".set_custom_captures {
+	-- Highlight the @foo.bar capture group with the "Identifier" highlight group.
+	["variable"] = "Default",
+	["property"] = "White",
+	["operator"] = "White",
+	["constant"] = "Macro",
+	["keyword"] = "PreProc",
+}
 
 -- ===========================
 --  YCM desn't support 32-bit system
@@ -444,32 +477,27 @@ require('mini.indentscope').setup({});
 require('mini.pairs').setup({});
 require('mini.cursorword').setup({});
 
--- ===========================
---   neovim-treesitter
--- ===========================
--- lua << EOF
--- require'nvim-treesitter.configs'.setup {
---   ensure_installed = { "c", "lua" },
---   sync_install = false,
---   ignore_install = { "javascript" },
---   highlight = {
---     enable = true,
---     additional_vim_regex_highlighting = false,
---   },
--- }
--- EOF
 
--- ===========================
---   nvim-lsp-installer
--- ===========================
-require("nvim-lsp-installer").setup({
-    automatic_installation = true, -- automatically detect which servers to install (based on which servers are set up via lspconfig)
-    ui = {
-        icons = {
-            server_installed = "✓",
-            server_pending = "➜",
-            server_uninstalled = "✗"
-        }
-    }
-})
+lspconfig.sumneko_lua.setup {
+	settings = {
+		Lua = {
+			runtime = {
+				-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+				version = 'LuaJIT',
+			},
+			diagnostics = {
+				-- Get the language server to recognize the `vim` global
+				globals = {'vim'},
+			},
+			workspace = {
+				-- Make the server aware of Neovim runtime files
+				library = vim.api.nvim_get_runtime_file("", true),
+			},
+			-- Do not send telemetry data containing a randomized but unique identifier
+			telemetry = {
+				enable = false,
+			},
+		},
+	},
+}
 

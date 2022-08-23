@@ -44,10 +44,11 @@ set mouse=nvi
 set winbar=%F
 set laststatus=3
 set mousescroll=ver:5,hor:2
+set jumpoptions=view
 
 silent let g:cur_term = system('ps -p $(ps -p $(ps -p $PPID -o ppid=) -o ppid=) o args=')
-silent let g:clangso = system('locate libclang.so | head -n1')
-silent let g:clangpath = strpart(g:clangso, 0, strridx( g:clangso, '/' ))
+silent let g:clangpath = system('llvm-config --libdir | tr -d "\n"')
+let g:clangso = g:clangpath . "/libclang.so"
 
 set termguicolors
 
@@ -63,6 +64,13 @@ set t_Co=256
 set guicursor=n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50
 			\,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor
 			\,sm:block-blinkwait175-blinkoff150-blinkon175
+
+filetype on
+
+" set the type of file without extention to log
+if strlen(&filetype) == 0
+	set filetype=log
+endif
 
 "if g:cur_term !~ "sshd"
 "endif
@@ -82,11 +90,10 @@ Plug 'timakro/vim-searchant'
 "Plug 'lilydjwg/colorizer'
 Plug 'AndrewRadev/splitjoin.vim'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'codota/tabnine-vim'
 Plug 'zchee/libclang-python3'
 Plug 'joshdick/onedark.vim'
 Plug 'zanglg/nova.vim'
-Plug 'WolfgangMehner/c-support'
+Plug 'WolfgangMehner/c-support', { 'for': ['c','cpp'] }
 Plug 'echasnovski/mini.nvim'
 Plug 'mileszs/ack.vim'
 "Plug 'qpkorr/vim-bufkill'
@@ -104,12 +111,12 @@ Plug 'IMOKURI/line-number-interval.nvim'
 Plug 'williamboman/nvim-lsp-installer'
 Plug 'neovim/nvim-lspconfig'
 Plug 'weilbith/nvim-lsp-smag'
-Plug 'jackguo380/vim-lsp-cxx-highlight'
-"Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+"Plug 'jackguo380/vim-lsp-cxx-highlight'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 "Plug 'liuchengxu/vista.vim'
 Plug 'embark-theme/vim', { 'as': 'embark' }
 Plug 'itchyny/landscape.vim'
-Plug 'github/copilot.vim'
+"Plug 'github/copilot.vim'
 "Plug 'stevearc/dressing.nvim'
 Plug 'mtdl9/vim-log-highlighting'
 call plug#end()
@@ -126,13 +133,7 @@ if has("gui_running")
 		set guifont=Consolas\ 11
 	endif
 else
-	if exists('g:gui_ond')
-		set noruler
-		set laststatus=0
-		colorscheme onedark
-	else
-		colorscheme onedark
-	endif
+	colorscheme onedark
 endif
 
 let g:tex_flavor='xelatex'
@@ -141,7 +142,6 @@ let g:vimtex_quickfix_mode=0
 "set conceallevel=1
 "let g:tex_conceal='abdmg'
 
-filetype on
 "===========================
 " tagbar
 "===========================
@@ -255,11 +255,6 @@ let g:C_GuiSnippetBrowser = 'commandline'
 " Bind command to open vimrc file.
 nnoremap <Leader>vc :e $MYVIMRC<CR>
 
-" set the type of file without extention to log
-if strlen(&filetype) == 0
-	set filetype=log
-endif
-
 cmap w!! w !sudo  tee > /dev/null %
 
 set path+=$PWD/**
@@ -327,27 +322,6 @@ if has('persistent_undo')
 	set undolevels=1000
 	set undoreload=10000
 endif
-
-"===========================
-" chromatica
-"===========================
-"let g:diminactive_buftype_blacklist = []
-"let g:chromatica#libclang_path=g:clangpath
-"let g:chromatica#enable_at_startup=1
-"let g:chromatica#highlight_feature_level=1
-"let g:chromatica#responsive_mode=0
-hi Member    ctermfg=166 guifg=#cb4b16
-hi Type      ctermfg=35  guifg=Green
-hi Namespace ctermfg=14  guifg=#006bd2
-hi Typedef   ctermfg=166 gui=bold guifg=#BBBB00
-hi AutoType  ctermfg=208 guifg=#ff8700
-hi EnumConstant        ctermfg=208 guifg=#ff8700
-hi chromaticaException ctermfg=166 gui=bold guifg=#B58900
-hi chromaticaCast      ctermfg=35  gui=bold guifg=#719E07
-hi link chromaticaInclusionDirective cInclude
-hi link chromaticaMemberRefExprCall  Type
-hi CopilotSuggestion guifg=#555555 ctermfg=8
-hi MiniIndentscopeSymbol ctermfg=36  guifg=#008b8b
 
 "===========================
 " YCM desn't support 32-bit system
@@ -429,19 +403,41 @@ require('mini.cursorword').setup({});
 EOF
 
 "===========================
+" customize highlight
+"===========================
+hi Member    ctermfg=166 guifg=#cb4b16
+hi White     ctermfg = 37, guifg=#FFFFFF
+hi Type      ctermfg=35  guifg=Green
+hi Namespace ctermfg=14  guifg=#006bd2
+hi Typedef   ctermfg=166 gui=bold guifg=#BBBB00
+hi AutoType  ctermfg=208 guifg=#ff8700
+hi EnumConstant        ctermfg=208 guifg=#ff8700
+hi chromaticaCast      ctermfg=35  gui=bold guifg=#719E07
+hi CopilotSuggestion guifg=#555555 ctermfg=8
+hi MiniIndentscopeSymbol ctermfg=36  guifg=#008b8b
+
+"===========================
 "  neovim-treesitter
 "===========================
-"lua << EOF
-"require'nvim-treesitter.configs'.setup {
-"  ensure_installed = { "c", "lua" },
-"  sync_install = false,
-"  ignore_install = { "javascript" },
-"  highlight = {
-"    enable = true,
-"    additional_vim_regex_highlighting = false,
-"  },
-"}
-"EOF
+lua << EOF
+require'nvim-treesitter.configs'.setup {
+  ensure_installed = { "c", "lua" },
+  sync_install = false,
+  ignore_install = { "javascript" },
+  highlight = {
+    enable = true,
+    additional_vim_regex_highlighting = false,
+  },
+}
+require"nvim-treesitter.highlight".set_custom_captures {
+	-- Highlight the @foo.bar capture group with the "Identifier" highlight group.
+	["variable"] = "Default",
+	["property"] = "White",
+	["operator"] = "White",
+	["constant"] = "Macro",
+	["keyword"] = "PreProc",
+}
+EOF
 
 "===========================
 "  nvim-lsp-installer
@@ -458,3 +454,29 @@ require("nvim-lsp-installer").setup({
     }
 })
 EOF
+
+lua << EOF
+require'lspconfig'.sumneko_lua.setup {
+	settings = {
+		Lua = {
+			runtime = {
+				-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
+				version = 'LuaJIT',
+			},
+			diagnostics = {
+				-- Get the language server to recognize the `vim` global
+				globals = {'vim'},
+			},
+			workspace = {
+				-- Make the server aware of Neovim runtime files
+				library = vim.api.nvim_get_runtime_file("", true),
+			},
+			-- Do not send telemetry data containing a randomized but unique identifier
+			telemetry = {
+				enable = false,
+			},
+		},
+	},
+}
+EOF
+
