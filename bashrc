@@ -107,6 +107,7 @@ alias define='googler -p 127.0.0.1:8087 -n 2 define'
 alias dump2014obj='/opt/arm-2014.05/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
 alias dumparmobj='/opt/arm-2009q1/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
 alias dumphisiobj='arm-hisiv400-linux-objdump -S -l -z  -j .text'
+alias dump626obj='aarch64-mix410-linux-objdump -S -l -z  -j .text'
 alias dumpobj='objdump -S -l -z  -j .text'
 alias xo='xdg-open'
 alias ftpput='ncftpput -u root -p hisome -P 3121'
@@ -114,7 +115,6 @@ alias ftpget='ncftpget -u root -p hisome -P 3121'
 alias pandoc="pandoc --template=$HOME/Templates/template.tex --latex-engine=xelatex"
 alias untar='tar -zxvf'
 #alias ping='prettyping --nolegend'
-alias trans='trans -l Chinese'
 alias svnchangelog='svn propedit --revprop svn:log'
 alias svneditignores='svn pedit svn:global-ignores .'
 alias svndiff='svn --diff-cmd=/home/wangxb/.subversion/vimdiff.sh diff'
@@ -123,8 +123,11 @@ alias hinvr='sshpass ssh -l root -p 3122'
 alias foobar2000='mpg321'
 alias df='df -xsquashfs'
 alias playg711='ffplay -nodisp -f alaw -ac 1 -ar 8000 -i'
-
-bind -x '"\C-l":ls -l'
+alias mdreader='glow -p'
+alias cp='cp -ig'
+alias mv='mv -ig'
+alias vim='~/.lasypig/vim'
+alias gvim='~/.lasypig/gvim'
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -154,6 +157,7 @@ addToPATH /opt/arm-2014.05/bin
 addToPATH /usr/local/texlive/2013/bin/i386-linux
 addToPATH /home/wangxb/misc/node.js/bin
 addToPATH /opt/hisi-linux/x86-arm/arm-hisiv400-linux/target/bin
+addToPATH /opt/hisi-linux/x86-arm/aarch64-mix410-linux/bin
 
 export PYTHONPATH=$(echo /usr/lib/llvm-6.0/build/lib/)
 export LD_LIBRARY_PATH=$(llvm-config-6.0 --libdir)
@@ -231,7 +235,7 @@ function svn
 	then
 		eval $(which svn) $CMD | while IFS= read -r RL
 		do
-			if   [[ $RL =~ ^\ ?M ]]; then C="\033[34m";
+			if   [[ $RL =~ ^\ ?M ]]; then C="\033[36m";
 			elif [[ $RL =~ ^\ ?C ]]; then C="\033[41m\033[37m\033[1m";
 			elif [[ $RL =~ ^A ]]; then C="\033[32m\033[1m";
 			elif [[ $RL =~ ^D ]]; then C="\033[31m\033[1m";
@@ -277,7 +281,7 @@ man() {
     LESS_TERMCAP_so=$(printf "\e[38;5;212m") \
     LESS_TERMCAP_ue=$(printf "\e[0m") \
     LESS_TERMCAP_us=$(printf "\e[04;38;5;146m") \
-    man -S 2:3:1 "$@"
+    man -S 2:3:1:7:8 "$@"
 }
 
 # press ctrl-l to ls
@@ -297,7 +301,9 @@ alias tmux="env TERM=xterm-256color tmux"
 #	export BAT_THEME="GitHub"
 #	alias cat='bat -n'
 #fi
-
+export FZF_DEFAULT_COMMAND="fd -E '*.o' -E '*.d'"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND="fd -t d"
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
 #if [[ -f ~/.lasypig/mcfly.bash ]]; then
@@ -311,7 +317,7 @@ calc() { awk "BEGIN{ print $* }" ;}
 sxh () { for i in "${@:2}"; do ssh "$i" "$1"; done ; }
 complete -o default -o nospace -W "$(grep -i -e '^host ' ~/.ssh/config | awk '{print substr($0, index($0,$2))}' ORS=' ')" ssh scp sftp
 
-ACK=`which ack`
+ACK=$(which ack)
 function grepc()
 {
 	if [ $# -eq 1 ]; then
@@ -323,7 +329,6 @@ function grepc()
 			grep --color=auto -n -r --include="*.[c]" --include="*.cpp" "$1" *
 		fi
 	fi
-
 }
 
 function greph()
@@ -337,7 +342,6 @@ function greph()
 			grep --color=auto -n -r --include="*.h" --include="*.hh" --include="*.hpp" "$1" *
 		fi
 	fi
-
 }
 
 function grepm()
@@ -349,15 +353,27 @@ function grepm()
 			grep --color=auto -n -r --include="*.mk" --include="Makefile" "$1" *
 		fi
 	fi
-
 }
 
 . "$HOME/.cargo/env"
 
-# enable headphone
+alias bd=". bd -si"
+
 function fixheadphone()
 {
 	pactl set-card-profile 0 output:analog-stereo
 	pactl set-sink-port alsa_output.pci-0000_00_1f.3.analog-stereo analog-output-headphones
 }
+
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+
+#if $(which mcfly > /dev/null); then
+	#eval "$(mcfly init bash)"
+#fi
+
 
