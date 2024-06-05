@@ -325,7 +325,7 @@ set seqsync      - sequence sync
 spy> help loglevel 
 loglevel [N]  - get loglevel or set loglevel to N
 ```
-我们看到`loglevel·可以不带参数用，此时会返回当前日志的级别；也可以带参数用，参数`N`的范围为0-7，此时会设置日志级别为`N`。比如：
+我们看到`loglevel`可以不带参数用，此时会返回当前日志的级别；也可以带参数用，参数`N`的范围为0-7，此时会设置日志级别为`N`。比如：
 ```shell
 spy> loglevel 
 loglevel is 5
