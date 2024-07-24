@@ -27,6 +27,7 @@ set showmatch
 set nobackup
 set nowb
 set noswapfile
+set diffopt+=linematch:60
 set listchars=tab:\┆\ ,extends:>,precedes:<
 
 set hidden
@@ -80,46 +81,60 @@ endif
 let g:plug_window = 'new'
 call plug#begin(stdpath('config') . '/plugged')
 "Plug 'Xuyuanp/nerdtree-git-plugin'
+"Plug 'https://github.com/adelarsq/vim-devicons-emoji'
+"Plug 'leafgarland/typescript-vim'
+"Plug 'lilydjwg/colorizer'
+"Plug 'qpkorr/vim-bufkill'
+"Plug 'dense-analysis/ale'
+"Plug 'tweekmonster/startuptime.vim'
+"Plug 'jackguo380/vim-lsp-cxx-highlight'
+"Plug 'liuchengxu/vista.vim'
+Plug 'github/copilot.vim'
+"Plug 'stevearc/dressing.nvim'
+"Plug 'uga-rosa/ccc.nvim'
 Plug 'itchyny/lightline.vim'
 Plug 'ryanoasis/vim-devicons'
-"Plug 'https://github.com/adelarsq/vim-devicons-emoji'
 Plug 'preservim/nerdtree'
 Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plug 'timakro/vim-searchant'
-"Plug 'leafgarland/typescript-vim'
-"Plug 'lilydjwg/colorizer'
 Plug 'AndrewRadev/splitjoin.vim'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'zchee/libclang-python3'
 Plug 'joshdick/onedark.vim'
 Plug 'zanglg/nova.vim'
-Plug 'WolfgangMehner/c-support', { 'for': ['c','cpp'] }
+Plug 'WolfgangMehner/c-support', { 'for': ['c','cpp','h'] }
 Plug 'echasnovski/mini.nvim'
 Plug 'mileszs/ack.vim'
-"Plug 'qpkorr/vim-bufkill'
 Plug 'MaxSt/FlatColor'
-Plug 'majutsushi/tagbar'
-"Plug 'dense-analysis/ale'
+Plug 'preservim/tagbar'
 Plug 'godlygeek/tabular'
 Plug 'mattn/vim-maketable'
 Plug 'mhinz/vim-lookup'
-"Plug 'tweekmonster/startuptime.vim'
 Plug 'lervag/vimtex'
 Plug 'voldikss/vim-translator'
 Plug 'voldikss/vim-floaterm'
 Plug 'IMOKURI/line-number-interval.nvim'
-Plug 'williamboman/nvim-lsp-installer'
 Plug 'neovim/nvim-lspconfig'
+Plug 'williamboman/mason.nvim'
+"Plug 'SmiteshP/nvim-navic'
 Plug 'weilbith/nvim-lsp-smag'
-"Plug 'jackguo380/vim-lsp-cxx-highlight'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-"Plug 'liuchengxu/vista.vim'
+Plug 'nvim-treesitter/playground'
 Plug 'embark-theme/vim', { 'as': 'embark' }
 Plug 'itchyny/landscape.vim'
-"Plug 'github/copilot.vim'
-"Plug 'stevearc/dressing.nvim'
 Plug 'mtdl9/vim-log-highlighting'
+Plug 'vim-scripts/CmdlineComplete'
+Plug 'bagrat/vim-buffet'
+Plug 'HampusHauffman/block.nvim'
+Plug 'dstein64/nvim-scrollview', { 'branch': 'main' }
+"Plug 'codota/tabnine-nvim', { 'do': './dl_binaries.sh' }
 call plug#end()
+
+if exists("g:neovide")
+	set guifont=Consolas:h10
+	set linespace=0
+	colorscheme onedark
+endif
 
 if has("gui_running")
 	set ambiwidth=double
@@ -146,7 +161,7 @@ let g:vimtex_quickfix_mode=0
 " tagbar
 "===========================
 if !&diff
-   autocmd FileType c,cpp,h,vim,py,lua nested :TagbarOpen
+   autocmd FileType c,cpp,h,vim,py,lua,javascript nested :TagbarOpen
 endif
 let g:tagbar_sort = 0
 let g:tagbar_type_c = {
@@ -165,6 +180,21 @@ let g:tagbar_type_c = {
     \ ],
 \ }
 
+"===========================
+"  mason: lsp installer
+"===========================
+lua << EOF
+require("mason").setup({
+    ui = {
+        icons = {
+			package_installed = "✓",
+			package_pending = "➜",
+			package_uninstalled = "✗"
+        }
+    }
+})
+EOF
+
 lua << EOF
 local nvim_lsp = require'lspconfig'
 nvim_lsp.ccls.setup {
@@ -177,15 +207,36 @@ nvim_lsp.ccls.setup {
 		}
 	};
 }
-nvim_lsp.texlab.setup {
-    cmd = { "texlab" };
-    filetypes = { "tex" };
+
+nvim_lsp.ltex.setup {
+    cmd = { "ltex-ls" };
+    filetypes = { "bib", "gitcommit", "markdown", "org", "plaintex", "rst", "rnoweb", "tex", "pandoc" };
+	root_dir = function()
+		return vim.fn.getcwd()
+    end;
 	init_options = {
 		highlight = {
 			lsRanges = true;
-		}
+		};
 	};
+	settings = {
+		ltex = {
+			language = "auto"
+		}
+	}
 }
+
+nvim_lsp.rust_analyzer.setup {
+    cmd = { "rust-analyzer" };
+    filetypes = { "rust" };
+	root_dir = nvim_lsp.util.root_pattern("Cargo.toml", "rust-project.json");
+	settings = {
+		["rust-analyzer"] = {}
+	}
+}
+
+nvim_lsp.tsserver.setup{}
+
 EOF
 
 set tags=tags;
@@ -218,7 +269,8 @@ nmap <F3> :NERDTreeToggle<CR><c-w>h
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 
 " C-support 
-let g:C_UseTool_doxygen = 'yes'
+let g:C_MapLeader  = '\'
+"let g:C_UseTool_doxygen = 'yes'
 "let g:C_LocalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
 "let g:C_GlobalTemplateFile = $HOME.'/.config/nvim/templates/Templates'
 "let g:C_CustomTemplateFile = $HOME.'/.config/nvim/templates/Templates'
@@ -236,15 +288,6 @@ map zz :qall<Enter>
 
 nnoremap <silent> <a-left> <c-w><
 nnoremap <silent> <a-right> <c-w>>
-
-let g:DoxygenToolkit_blockHeader="--------------------------------------------------------------------------"
-let g:DoxygenToolkit_blockFooter="--------------------------------------------------------------------------"
-let g:DoxygenToolkit_authorName="wangxb@hisome.com"
-let g:DoxygenToolkit_licenseTag="Copyright @ Hisome"
-let g:DoxygenToolkit_commentType = "C"
-
-" syntastic
-let g:syntastic_check_on_open=1
 
 " set pastetoggle=<F4>
 vnoremap <F6> :Tabularize/=<CR>
@@ -295,6 +338,9 @@ nnoremap t<CR> :below 20sp term://$SHELL<CR>i
 " lightline settings
 "======================================
 let g:lightline = {
+	  \ 'enable':{
+	  \    'tabline':0
+	  \ },
       \ 'colorscheme': 'flatcolor',
       \ 'mode_map': { 'c': 'NORMAL' },
       \ 'active': {
@@ -396,6 +442,7 @@ let g:ministatusline_disable = v:true
 let g:minisurround_disable = v:true
 let g:minitabline_disable = v:true
 let g:minitrailspace_disable = v:true
+
 lua << EOF
 require('mini.indentscope').setup({});
 require('mini.pairs').setup({});
@@ -406,7 +453,7 @@ EOF
 " customize highlight
 "===========================
 hi Member    ctermfg=166 guifg=#cb4b16
-hi White     ctermfg = 37, guifg=#FFFFFF
+hi myWhite   ctermfg=37  guifg=#FFFFFF
 hi Type      ctermfg=35  guifg=Green
 hi Namespace ctermfg=14  guifg=#006bd2
 hi Typedef   ctermfg=166 gui=bold guifg=#BBBB00
@@ -421,7 +468,7 @@ hi MiniIndentscopeSymbol ctermfg=36  guifg=#008b8b
 "===========================
 lua << EOF
 require'nvim-treesitter.configs'.setup {
-  ensure_installed = { "c", "lua" },
+  ensure_installed = { "c", "lua", "rust"},
   sync_install = false,
   ignore_install = { "javascript" },
   highlight = {
@@ -429,54 +476,54 @@ require'nvim-treesitter.configs'.setup {
     additional_vim_regex_highlighting = false,
   },
 }
-require"nvim-treesitter.highlight".set_custom_captures {
-	-- Highlight the @foo.bar capture group with the "Identifier" highlight group.
-	["variable"] = "Default",
-	["property"] = "White",
-	["operator"] = "White",
-	["constant"] = "Macro",
-	["keyword"] = "PreProc",
-}
+-- custom highlight
+vim.api.nvim_set_hl(0, "@property.c", { link = "myWhite" })
+vim.api.nvim_set_hl(0, "@variable.c", { link = "Debug" })
+vim.api.nvim_set_hl(0, "@operator.c", { link = "Keyword" })
+vim.api.nvim_set_hl(0, "@constant.c", { link = "Macro" })
+vim.api.nvim_set_hl(0, "@keyword.c", { link = "Keyword" })
+vim.api.nvim_set_hl(0, "@punctuation.bracket", { link = "myWhite" })
 EOF
 
-"===========================
-"  nvim-lsp-installer
-"===========================
+"================================"
+" vim-bufflet
+"================================
+let g:buffet_powerline_separators = 1
+nmap <leader>1 <Plug>BuffetSwitch(1)
+nmap <leader>2 <Plug>BuffetSwitch(2)
+nmap <leader>3 <Plug>BuffetSwitch(3)
+nmap <leader>4 <Plug>BuffetSwitch(4)
+nmap <leader>5 <Plug>BuffetSwitch(5)
+nmap <leader>6 <Plug>BuffetSwitch(6)
+nmap <leader>7 <Plug>BuffetSwitch(7)
+nmap <leader>8 <Plug>BuffetSwitch(8)
+nmap <leader>9 <Plug>BuffetSwitch(9)
+nmap <leader>0 <Plug>BuffetSwitch(10)
+
+
 lua << EOF
-require("nvim-lsp-installer").setup({
-    automatic_installation = true, -- automatically detect which servers to install (based on which servers are set up via lspconfig)
-    ui = {
-        icons = {
-            server_installed = "✓",
-            server_pending = "➜",
-            server_uninstalled = "✗"
-        }
-    }
+require("block").setup({
+		percent = 1.2,
+        depth = 4,
+        colors = nil,
+        automatic = false,
+--        colors = {
+--            "#ff0000"
+--            "#00ff00"
+--            "#0000ff"
+--        }
 })
 EOF
 
 lua << EOF
-require'lspconfig'.sumneko_lua.setup {
-	settings = {
-		Lua = {
-			runtime = {
-				-- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
-				version = 'LuaJIT',
-			},
-			diagnostics = {
-				-- Get the language server to recognize the `vim` global
-				globals = {'vim'},
-			},
-			workspace = {
-				-- Make the server aware of Neovim runtime files
-				library = vim.api.nvim_get_runtime_file("", true),
-			},
-			-- Do not send telemetry data containing a randomized but unique identifier
-			telemetry = {
-				enable = false,
-			},
-		},
-	},
-}
+--require('tabnine').setup({
+--  disable_auto_comment=true,
+--  accept_keymap="<a-t>",
+--  dismiss_keymap = "<C-]>",
+--  debounce_ms = 800,
+--  suggestion_color = {gui = "#808080", cterm = 244},
+--  exclude_filetypes = {"TelescopePrompt", "NvimTree"},
+--  log_file_path = nil, -- absolute path to Tabnine log file
+--})
 EOF
 
