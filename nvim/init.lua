@@ -1,3 +1,15 @@
+--With Nvim 0.12 this is a complete, working init.lua that provides 80% of what users want:
+
+-- vim.pack.add{
+--   'https://github. com/echasnovski/mini.completion',
+--   'https://github. com/ibhagwan/fzf-lua',
+--   'https://github. com/neovim/nvim-lspconfig',
+-- }
+-- require('mini.completion').setup{}
+-- vim.lsp.enable('...')
+
+
+
 -- ALIAS and functions
 local cmd = vim.cmd
 local fn = vim.fn
@@ -41,6 +53,7 @@ opt.incsearch = true	-- do incremental searching
 opt.tabstop = 4
 opt.softtabstop = 4
 opt.shiftwidth = 4
+opt.cursorline = true
 vim.noexpandtab = true
 opt.number = true
 -- vim.wo.relativenumber = true
@@ -54,27 +67,30 @@ opt.showmatch = true
 opt.jumpoptions = "view"
 opt.bk = false
 opt.wb = false
+--opt.autowriteall = true
 opt.swapfile = false
-opt.listchars = { tab = '┆ ', extends = '>', precedes = '<' }
 opt.hidden = true
 opt.wildmenu = true
 opt.wildmode = 'list:longest'
 opt.ignorecase = true
 opt.smartcase = true
 opt.inccommand = 'nosplit'
-opt.mouse = 'nvi'
+opt.mouse = 'a'
 opt.termguicolors = true
 -- opt.shortmess -= 'S'
-cmd([[
-set tags=tags;
-set autochdir
-]])
---opt.tags = "tags"
---opt.autochdir = true
+opt.tags = "tags"
+--opt.winborder = "rounded"
+opt.pumborder = "rounded"
+opt.autochdir = true
 opt.encoding = "utf-8"
 opt.fileencodings = {'ucs-bom','utf-8','gbk','cp936'}
 opt.path = opt.path + "$PWD/**"
 opt.clipboard = "unnamedplus"
+
+-- auto save
+cmd([[autocmd BufHidden,FocusLost,WinLeave,CursorHold * if &buftype=='' && filereadable(expand('%:p')) | silent lockmarks update ++p | endif]])
+
+vim.diagnostic.config({ virtual_text = { current_line = true } })
 
 --opt.winbar = '%F'
 opt.laststatus = 3
@@ -123,24 +139,17 @@ vim.api.nvim_create_autocmd({"BufWinEnter"}, {
 })
 
 --  Improved n/N - center line after page scroll
-cmd([[
-function! s:nice_next(cmd) abort
-    let topline  = line('w0')
-    let v:errmsg = ""
-    execute "silent! normal! " . a:cmd
-    if v:errmsg =~ 'E38[45]:.*'
-        echohl Error | unsilent echom v:errmsg | echohl None
-        let v:errmsg = ""
-        return
-    endif
-    if topline != line('w0')
-        normal! zz
-    endif
-endfun
 
-nnoremap <silent> n :call <SID>nice_next('n')<cr>
-nnoremap <silent> N :call <SID>nice_next('N')<cr>
-]])
+function nice_next(cmd)
+    local topline = vim.fn.line('w0')
+    vim.cmd("silent! normal! " .. cmd)
+    if topline ~= vim.fn.line('w0') then
+        vim.cmd("normal! zz")
+    end
+end
+
+vim.api.nvim_set_keymap('n', 'n', ':lua nice_next("n")<CR>', {silent=true})
+vim.api.nvim_set_keymap('n', 'N', ':lua nice_next("N")<CR>', {silent=true})
 
 if fn.has('nvim') == 1 then
 	keymap('t', "<Esc>", "<C-\\><C-n>")
@@ -169,17 +178,19 @@ require("lazyinit")
 if vim.g.neovide then
 	opt.linespace=0
 	opt.guifont = "Consolas Nerd Font:h10"
-end
-
-if fn.has("gui_running") == 1 then
-	opt.ambiwidth = "double"
-	if fn.has("win32") == 1 then
-		cmd([[au GUIEnter * simalt ~x]])
-		opt.guifont = "Consolas:h10"
-		opt.clipboard = "unnamed"
-	else
-		cmd([[au GUIEnter * call shy#MaximizeWindow()]])
-		opt.guifont = "Consolas 11"
+	--vim.g.neovide_fullscreen = true
+else
+	opt.listchars = { tab = '┆ ', extends = '>', precedes = '<' }
+	if fn.has("gui_running") == 1 then
+		opt.ambiwidth = "double"
+		if fn.has("win32") == 1 then
+			cmd([[au GUIEnter * simalt ~x]])
+			opt.guifont = "Consolas:h10"
+			opt.clipboard = "unnamed"
+		else
+			cmd([[au GUIEnter * call shy#MaximizeWindow()]])
+			opt.guifont = "Consolas 11"
+		end
 	end
 end
 
@@ -207,4 +218,147 @@ vim.api.nvim_set_hl(0, "@constant.c", { link = "Macro" })
 vim.api.nvim_set_hl(0, "@keyword.c", { link = "Keyword" })
 vim.api.nvim_set_hl(0, "@punctuation.bracket", { link = "myWhite" })
 vim.api.nvim_set_hl(0, "DimLineNr", { link = "LineNr" })
+
+--vim.diagnostic.config({ virtual_text = true })
+
+vim.lsp.inline_completion.enable(true)
+
+vim.api.nvim_create_autocmd('LspAttach', {
+  callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+    if client:supports_method('textDocument/completion') then
+      vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+    end
+  end,
+})
+
+vim.cmd("set completeopt+=noselect")
+
+-- lua lsp config
+vim.lsp.config('lua_ls', {
+  on_init = function(client)
+    if client.workspace_folders then
+      local path = client.workspace_folders[1].name
+      if
+        path ~= vim.fn.stdpath('config')
+        and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc'))
+      then
+        return
+      end
+    end
+
+    client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
+      runtime = {
+        -- Tell the language server which version of Lua you're using (most
+        -- likely LuaJIT in the case of Neovim)
+        version = 'LuaJIT',
+        -- Tell the language server how to find Lua modules same way as Neovim
+        -- (see `:h lua-module-load`)
+        path = {
+          'lua/?.lua',
+          'lua/?/init.lua',
+        },
+      },
+      -- Make the server aware of Neovim runtime files
+      workspace = {
+        checkThirdParty = false,
+        library = {
+          vim.env.VIMRUNTIME
+          -- Depending on the usage, you might want to add additional paths
+          -- here.
+          -- '${3rd}/luv/library'
+          -- '${3rd}/busted/library'
+        }
+        -- Or pull in all of 'runtimepath'.
+        -- NOTE: this is a lot slower and will cause issues when working on
+        -- your own configuration.
+        -- See https://github.com/neovim/nvim-lspconfig/issues/3189
+        -- library = {
+        --   vim.api.nvim_get_runtime_file('', true),
+        -- }
+      }
+    })
+  end,
+  settings = {
+    Lua = {}
+  }
+})
+vim.lsp.enable('lua_ls')
+
+
+-- tex lsp config
+vim.lsp.config('texlab', {
+	settings = {
+		texlab = {
+			build = {
+				executable = 'latexmk',
+				args = { '-pdf', '-interaction=nonstopmode', '-synctex=1', '%f' },
+				onSave = true,
+			},
+			forwardSearch = {
+				executable = 'zathura',
+				args = { '--synctex-forward', '%l:1:%f', '%p' },
+			},
+			diagnosticsDelay = 300,
+		}
+	}
+})
+
+-- This is a custom function to handle the keywordprg option in Neovim
+function MyKeywordprg()
+  local keyword = vim.fn.expand("<cword>") -- Get the word under the cursor
+  local man_command = ":Man " .. keyword
+  local success, _ = pcall(vim.api.nvim_exec2, man_command, true)
+  if not success then
+    vim.lsp.buf.hover()
+  end
+end
+
+--local nvim_lsp = require'lspconfig'
+
+-- Set it as your keywordprg
+-- vim.o.keywordprg = "lua MyKeywordprg()"
+
+vim.lsp.enable('texlab')
+
+-- clangd lsp config
+vim.lsp.config('clangd',{
+	on_attach = function(client, bufnr)
+		local opts = { buffer = bufnr }
+		vim.keymap.set('n', 'K', MyKeywordprg, opts)
+	end,
+	cmd = { "clangd" };
+	filetypes = { "c", "objc", "objcpp", "cpp" };
+	root_markers = { 'compile_commands.json', 'compile_flags.txt', 'configure.ac', '.git', 'TARGET.mk'};
+	single_file_support = true;
+})
+vim.lsp.enable('clangd')
+
+-- rust lsp config
+vim.lsp.config('rust_analyzer', {
+	cmd = { "rust-analyzer" };
+	filetypes = { "rust" };
+	root_markers = {"Cargo.toml", "rust-project.json"};
+	settings = {
+		["rust-analyzer"] = {}
+	}
+})
+vim.lsp.enable('rust_analyzer')
+
+vim.lsp.enable('ts_ls')
+vim.lsp.enable('zk')
+
+vim.lsp.config('pylsp',{
+	settings = {
+		pylsp = {
+			plugins = {
+				pycodestyle = {
+					ignore = {'W391'},
+					maxLineLength = 100
+				}
+			}
+		}
+	}
+})
+vim.lsp.enable('pylsp')
 

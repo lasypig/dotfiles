@@ -100,10 +100,10 @@ alias findn='find . -name'
 alias LS='find -mount -maxdepth 1 -printf "%.5m %10M %#9u:%-9g %#5U:%-5G %TF_%TR %CF_%CR %AF_%AR %#15s [%Y] %p\n" 2>/dev/null'
 alias brt='java -jar ~/.lasypig/BranchMaster.jar'
 alias gvim='gvim 2> /dev/null'
-alias svnadd="svn status | grep \"^?\" | awk '{print $2}' | xargs svn add "
+alias svnadd=$'svn status | grep "^?" | awk \'{print $2}\' | xargs svn add '
 alias ctags='ctags -R --c-kinds=+p  --fields=+ias --extra=+q --exclude=.ccls-cache'
 alias :q='exit'
-alias define='googler -p 127.0.0.1:8087 -n 2 define'
+#alias define='googler -p 127.0.0.1:8087 -n 2 define'
 alias dump2014obj='/opt/arm-2014.05/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
 alias dumparmobj='/opt/arm-2009q1/bin/arm-none-linux-gnueabi-objdump -S -l -z  -j .text'
 alias dumphisiobj='arm-hisiv400-linux-objdump -S -l -z  -j .text'
@@ -122,12 +122,14 @@ alias hicp='sshpass scp -P 3122 -o User=root'
 alias hinvr='sshpass ssh -l root -p 3122'
 alias foobar2000='mpg321'
 alias df='df -xsquashfs'
-alias playg711='ffplay -nodisp -f alaw -ar 8000 -i'
+alias playg711a='ffplay -nodisp -f alaw -ar 8000 -i'
+alias playg711u='ffplay -nodisp -f mulaw -ar 8000 -i'
 alias mdreader='glow -p'
-alias cp='cp -ig'
-alias mv='mv -ig'
+#alias cp='cp -ig'
+#alias mv='mv -ig'
 alias vim='~/.lasypig/vim'
 alias gvim='~/.lasypig/gvim'
+alias sumatrapdf='wine /home/wangxb/sea/apps/exe/SumatraPDF-prerel-64.exe'
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -158,9 +160,15 @@ addToPATH /usr/local/texlive/2013/bin/i386-linux
 addToPATH /home/wangxb/misc/node.js/bin
 addToPATH /opt/hisi-linux/x86-arm/arm-hisiv400-linux/target/bin
 addToPATH /opt/hisi-linux/x86-arm/aarch64-mix410-linux/bin
+addToPATH /opt/loongson-gnu-toolchain-8.3-x86_64-loongarch64-linux-gnu-rc1.6/bin
+addToPATH /opt/kunpeng/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu/bin
 
 export PYTHONPATH=$(echo /usr/lib/llvm-6.0/build/lib/)
 export LD_LIBRARY_PATH=$(llvm-config-6.0 --libdir)
+
+#gemini-cli
+export GOOGLE_CLOUD_PROJECT=181763167177
+alias gemini="node /home/wangxb/sea/apps/gemini-cli/packages/cli"
 
 if [ -f /etc/bash_completion ]; then
 	. /etc/bash_completion
@@ -304,6 +312,10 @@ alias tmux="env TERM=xterm-256color tmux"
 export FZF_DEFAULT_COMMAND="fd -E '*.o' -E '*.d'"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND="fd -t d"
+# Preview file content using bat (https://github.com/sharkdp/bat)
+export FZF_CTRL_T_OPTS="
+  --preview 'bat -n --color=always {}'
+  --bind 'ctrl-/:change-preview-window(down|hidden|)'"
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 
 #if [[ -f ~/.lasypig/mcfly.bash ]]; then

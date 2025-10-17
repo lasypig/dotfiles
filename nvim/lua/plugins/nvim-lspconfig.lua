@@ -1,21 +1,37 @@
+-- This is a custom function to handle the keywordprg option in Neovim
+function MyKeywordprg()
+  local keyword = vim.fn.expand("<cword>") -- Get the word under the cursor
+  local man_command = ":Man " .. keyword
+  local success, _ = pcall(vim.api.nvim_exec, man_command, true)
+  if not success then
+    vim.lsp.buf.hover()
+  end
+end
+
+-- Set it as your keywordprg
+-- vim.o.keywordprg = "lua MyKeywordprg()"
+
+local on_attach = function(client, bufnr)
+  local opts = { buffer = bufnr }
+  vim.keymap.set('n', 'K', MyKeywordprg, opts)
+end
+
 return {
 	{
 		'neovim/nvim-lspconfig',
 		config = function()
 			local nvim_lsp = require'lspconfig'
 
-			--[[
-			nvim_lsp.ccls.setup {
-				cmd = { "ccls" };
-				filetypes = { "c", "cpp", "objc", "objcpp" };
-				root_dir = nvim_lsp.util.root_pattern("compile_commands.json", ".git", ".ccls-cache");
-				init_options = {
-					highlight = {
-						lsRanges = true;
-					}
-				};
-			}
-			--]]
+			-- nvim_lsp.ccls.setup {
+			-- 	cmd = { "ccls" };
+			-- 	filetypes = { "cpp" };
+			-- 	root_dir = nvim_lsp.util.root_pattern("compile_commands.json", ".git", ".ccls-cache");
+			-- 	init_options = {
+			-- 		highlight = {
+			-- 			lsRanges = true;
+			-- 		}
+			-- 	};
+			-- }
 
 			--[[
 			nvim_lsp.ltex.setup {
@@ -37,36 +53,7 @@ return {
 			}
 			--]]
 
-			nvim_lsp.rust_analyzer.setup {
-				cmd = { "rust-analyzer" };
-				filetypes = { "rust" };
-				root_dir = nvim_lsp.util.root_pattern("Cargo.toml", "rust-project.json");
-				settings = {
-					["rust-analyzer"] = {}
-				}
-			}
 
-			nvim_lsp.clangd.setup {
-				cmd = { "clangd-9" };
-				filetypes = { "c", "cpp", "objc", "objcpp" };
-				root_dir = nvim_lsp.util. root_pattern( '.clangd', '.clang-tidy', '.clang-format', 'compile_commands.json', 'compile_flags.txt', 'configure.ac', '.git');
-				single_file_support = true;
-			}
-
-			nvim_lsp.tsserver.setup{}
-
-			nvim_lsp.pylsp.setup{
-				settings = {
-					pylsp = {
-						plugins = {
-							pycodestyle = {
-								ignore = {'W391'},
-								maxLineLength = 100
-							}
-						}
-					}
-				}
-			}
 
 		end,
 	}
